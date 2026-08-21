@@ -1,0 +1,89 @@
+{
+  "name": "@nymrel/headless-quote",
+  "version": "1.0.0",
+  "description": "Zero-dependency embeddable visual quote calculator, dynamic range estimator, and lead capture engine with Nymrel Warm Paper aesthetics.",
+  "author": "Nymrel / JalenBuilds LLC <contact@jalenbuilds.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/nymrel/headless-quote-layer#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nymrel/headless-quote-layer.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/quote-layer.min.js",
+  "jsdelivr": "./dist/quote-layer.min.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./presets": {
+      "types": "./dist/presets.d.ts",
+      "import": "./dist/presets.js",
+      "require": "./dist/presets.cjs"
+    },
+    "./standalone": "./dist/quote-layer.min.js",
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "llms.txt"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vite build --mode standalone && tsc --emitDeclarationOnly",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0 || >=18.0.0 || >=19.0.0",
+    "react-dom": ">=17.0.0 || >=18.0.0 || >=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "happy-dom": "^15.11.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "quote-calculator",
+    "lead-capture",
+    "pricing-calculator",
+    "web-component",
+    "react-quote",
+    "cost-estimator",
+    "range-estimator",
+    "nymrel",
+    "warm-paper-ui",
+    "contractor-quote",
+    "saas-pricing",
+    "attribution"
+  ]
+}
