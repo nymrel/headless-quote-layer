@@ -2,7 +2,7 @@
   "name": "@nymrel/headless-quote",
   "version": "1.0.0",
   "description": "Zero-dependency embeddable visual quote calculator, dynamic range estimator, and lead capture engine with Nymrel Warm Paper aesthetics.",
-  "author": "Nymrel / JalenBuilds LLC <contact@nymrel.com>",
+  "author": "Nymrel <contact@nymrel.com>",
   "license": "MIT",
   "homepage": "https://github.com/nymrel/headless-quote-layer#readme",
   "repository": {
