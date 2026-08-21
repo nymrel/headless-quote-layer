@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/quote-layer.min.js",
+    "/quote-layer.umd.js",
+    "/*.js",
+    "/*.cjs",
+    "/*.css",
+    "/llms.txt",
+    "/robots.txt"
+  ]
+}

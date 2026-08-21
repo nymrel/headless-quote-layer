@@ -1,0 +1,56 @@
+# @nymrel/headless-quote
+
+> Zero-dependency embeddable visual quote calculator, dynamic range estimator, and lead capture engine with Nymrel Warm Paper aesthetics.
+
+## Entity & Trust Graph
+- **Entity**: Nymrel Headless Quote Layer
+- **Parent Organization**: Nymrel -> JalenBuilds LLC
+- **Lead Architect**: Built by Jalen
+- **Contact**: contact@nymrel.com
+- **License**: MIT
+- **Target Audience**: Human website visitors and autonomous AI agents
+
+## Architecture & Exports
+- `main`: `dist/index.cjs` (CommonJS module)
+- `module`: `dist/index.js` (ESM module)
+- `browser`: `dist/quote-layer.min.js` (Standalone IIFE bundle)
+- `react`: `dist/react.js` (React wrapper & `useQuoteEngine` hook)
+- `presets`: `dist/presets.js` (Roofing, HVAC, Plumbing, Software presets)
+
+## Web Component Interface
+```html
+<script src="https://cdn.jsdelivr.net/npm/@nymrel/headless-quote/dist/quote-layer.min.js"></script>
+<nymrel-quote-layer 
+  config="roofing|hvac|plumbing|software"
+  src="https://url/to/custom-schema.json"
+  webhook-url="https://api.yourdomain.com/v1/leads"
+  source-label="hero-pricing-cta"
+  theme-mode="warm|light|dark"
+  mode="shadow|light">
+</nymrel-quote-layer>
+```
+
+## Programmatic TypeScript API
+```typescript
+import { calculateQuote, extractAttribution, roofingPreset } from '@nymrel/headless-quote';
+
+// 1. Calculate instant range quote
+const quote = calculateQuote(roofingPreset, {
+  roof_sqft: 2400,
+  roof_pitch: 'steep',
+  material: 'standing_seam',
+  addons: ['tear_off', 'ice_water_barrier']
+});
+
+console.log(quote.formattedMin, quote.formattedMax); // e.g. "$16,200", "$19,800"
+
+// 2. Extract UTM & Click Attribution
+const attribution = extractAttribution({ sourceLabel: 'google-ads-lander' });
+```
+
+## Design Palette Tokens
+- Canvas Background: `#FAF8F2` (Warm Cream)
+- Surface / Inputs: `#F4F0E6` (Soft Linen)
+- Text / Headers: `#2A332E` (Cedar Green)
+- Primary Actions: `#A8541F` (Terracotta)
+- Borders: `#E2DCCE` (Warm Sand)

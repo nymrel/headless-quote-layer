@@ -1,0 +1,9 @@
+name = "headless-quote-layer"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+CDN_DISTRIBUTION = "true"
+PACKAGE_NAME = "@nymrel/headless-quote"
