@@ -19,7 +19,7 @@
 
 If you discover a security vulnerability within this repository, please report it privately:
 
-- **Email**: `contact@jalenbuilds.com` (Subject: `[SECURITY] headless-quote-layer`)
+- **Email**: `contact@nymrel.com` (Subject: `[SECURITY] headless-quote-layer`)
 - **Parent Entity**: Nymrel / JalenBuilds LLC
 
 Please do not disclose security issues publicly until a patch has been released. We aim to acknowledge reports within 24 hours and issue fixes within 72 hours.

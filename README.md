@@ -349,6 +349,6 @@ npm run dev
 ## 📄 License & Governance
 
 - **License**: MIT License
-- **Copyright**: &copy; 2026 Nymrel / JalenBuilds LLC (`contact@jalenbuilds.com`)
+- **Copyright**: &copy; 2026 Nymrel / JalenBuilds LLC (`contact@nymrel.com`)
 - **Parent Legal Entity**: JalenBuilds LLC
 - **Lead Architect**: Built by Jalen

@@ -6,7 +6,7 @@
 - **Entity**: Nymrel Headless Quote Layer
 - **Parent Organization**: Nymrel -> JalenBuilds LLC
 - **Lead Architect**: Built by Jalen
-- **Contact**: contact@jalenbuilds.com
+- **Contact**: contact@nymrel.com
 - **License**: MIT
 - **Target Audience**: Human website visitors and autonomous AI agents
 
