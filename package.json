@@ -46,7 +46,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
   },
   "peerDependencies": {
     "react": ">=17.0.0 || >=18.0.0 || >=19.0.0",
@@ -85,5 +86,8 @@
     "contractor-quote",
     "saas-pricing",
     "attribution"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
