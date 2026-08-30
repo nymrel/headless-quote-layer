@@ -5,7 +5,8 @@
  */
 import { QuoteResult } from '../core/types';
 import { NymrelQuoteWidget } from '../components/QuoteWidget';
-export declare class NymrelQuoteLayerElement extends HTMLElement {
+declare const HTMLElementBase: typeof HTMLElement;
+export declare class NymrelQuoteLayerElement extends HTMLElementBase {
     private widgetInstance;
     static get observedAttributes(): string[];
     connectedCallback(): void;
@@ -25,3 +26,4 @@ export declare class NymrelQuoteLayerElement extends HTMLElement {
  * Auto-register custom element if in browser
  */
 export declare function registerWebComponent(tagName?: string): void;
+export {};

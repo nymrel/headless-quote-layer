@@ -1,6 +1,8 @@
 {
   "name": "@nymrel/headless-quote",
   "version": "1.0.0",
+  "type": "module",
+  "packageManager": "npm@12.0.2",
   "description": "Zero-dependency embeddable visual quote calculator, dynamic range estimator, and lead capture engine with Nymrel Warm Paper aesthetics.",
   "author": "Nymrel <contact@nymrel.com>",
   "license": "MIT",
@@ -18,40 +20,56 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "require": "./dist/react.cjs",
+      "default": "./dist/react.js"
     },
     "./presets": {
-      "types": "./dist/presets.d.ts",
+      "types": "./dist/presets/index.d.ts",
       "import": "./dist/presets.js",
-      "require": "./dist/presets.cjs"
+      "require": "./dist/presets.cjs",
+      "default": "./dist/presets.js"
     },
-    "./standalone": "./dist/quote-layer.min.js",
-    "./style.css": "./dist/style.css"
+    "./standalone": "./dist/quote-layer.min.js"
   },
   "files": [
-    "dist",
+    "dist/*.cjs",
+    "dist/*.js",
+    "dist/*.d.ts",
+    "dist/components/**/*.d.ts",
+    "dist/core/**/*.d.ts",
+    "dist/presets/**/*.d.ts",
+    "dist/web-component/**/*.d.ts",
     "README.md",
     "LICENSE",
     "llms.txt"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --mode standalone && tsc --emitDeclarationOnly",
+    "build": "vite build && vite build --mode standalone && tsc -p tsconfig.build.json && node scripts/verify-package.mjs --normalize-only",
+    "lint": "oxlint --deny-warnings --type-aware --type-check src test scripts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm test"
+    "check:toolchain": "node scripts/verify-toolchain.mjs",
+    "check:ci-contract": "node --test test/ci-contract.test.mjs",
+    "check:package": "vite build && vite build --mode standalone && tsc -p tsconfig.build.json && node scripts/verify-package.mjs --normalize-only && node scripts/verify-package.mjs",
+    "check": "node scripts/verify-toolchain.mjs && oxlint --deny-warnings --type-aware --type-check src test scripts && tsc --noEmit && vitest run --coverage && node --test test/ci-contract.test.mjs && vite build && vite build --mode standalone && tsc -p tsconfig.build.json && node scripts/verify-package.mjs --normalize-only && node scripts/verify-package.mjs",
+    "audit:ci": "node scripts/verify-toolchain.mjs npm audit --audit-level=high",
+    "audit:prod": "node scripts/verify-toolchain.mjs npm audit --omit=dev --audit-level=high",
+    "prepack": "vite build && vite build --mode standalone && tsc -p tsconfig.build.json && node scripts/verify-package.mjs --normalize-only",
+    "prepublishOnly": "node scripts/verify-toolchain.mjs npm run check && node scripts/verify-toolchain.mjs npm run audit:ci"
   },
   "peerDependencies": {
-    "react": ">=17.0.0 || >=18.0.0 || >=19.0.0",
-    "react-dom": ">=17.0.0 || >=18.0.0 || >=19.0.0"
+    "react": ">=17.0.0 <20",
+    "react-dom": ">=17.0.0 <20"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -62,16 +80,18 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "happy-dom": "^20.11.6",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "typescript": "^5.6.3",
-    "vite": "^6.4.3",
-    "vite-plugin-dts": "^4.3.0",
-    "vitest": "^4.1.11"
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitest/coverage-v8": "4.1.11",
+    "happy-dom": "20.12.0",
+    "oxlint": "1.80.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
   },
   "keywords": [
     "quote-calculator",
@@ -88,6 +108,23 @@
     "attribution"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=22.22.2 <27",
+    "npm": ">=10.9 <13"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=22.22.2 <27",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "12.0.2",
+      "onFail": "error"
+    }
   }
 }

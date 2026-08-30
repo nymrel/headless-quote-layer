@@ -1,0 +1,43 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:truthy
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 9 * * 1'
+
+permissions: {}
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: JavaScript and TypeScript analysis
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read  # CodeQL requires workflow metadata while it initializes analysis.
+      contents: read
+      security-events: write  # Upload the resulting SARIF analysis to GitHub code scanning.
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.33.0
+        with:
+          build-mode: none
+          languages: javascript-typescript
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.33.0
+        with:
+          category: /language:javascript-typescript

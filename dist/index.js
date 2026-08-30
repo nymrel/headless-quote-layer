@@ -1,159 +1,128 @@
-var h = Object.defineProperty;
-var g = (s, a, e) => a in s ? h(s, a, { enumerable: !0, configurable: !0, writable: !0, value: e }) : s[a] = e;
-var c = (s, a, e) => g(s, typeof a != "symbol" ? a + "" : a, e);
-import { N as b } from "./ReactQuoteWidget-D_unP1kP.mjs";
-import { D as A, a as I, L as Q, Q as T, b as L, c as W, q as x, e as M, d as P, f as R, g as q, h as D, i as H, j as N, k as _, l as F, r as U, s as $, t as j, m as G, n as J, o as O, p as V, u as z, v as K } from "./ReactQuoteWidget-D_unP1kP.mjs";
-import { roofingPreset as p, getPreset as f } from "./presets.js";
-import { PRESET_REGISTRY as B, hvacPreset as X, plumbingPreset as Z, softwarePreset as ee } from "./presets.js";
-class w extends HTMLElement {
-  constructor() {
-    super(...arguments);
-    c(this, "widgetInstance", null);
-  }
-  static get observedAttributes() {
-    return ["config", "src", "webhook-url", "source-label", "theme-mode", "mode"];
-  }
-  connectedCallback() {
-    this.initWidget();
-  }
-  disconnectedCallback() {
-    this.widgetInstance = null;
-  }
-  attributeChangedCallback(e, o, i) {
-    o !== i && this.isConnected && this.initWidget();
-  }
-  async initWidget() {
-    const e = this.getAttribute("config"), o = this.getAttribute("src"), i = this.getAttribute("webhook-url") || void 0, l = this.getAttribute("source-label") || void 0, u = this.getAttribute("theme-mode") || "warm", d = this.getAttribute("mode") || "shadow";
-    let r = p;
-    if (o)
-      try {
-        const t = await fetch(o);
-        if (!t.ok)
-          throw new Error(`Failed to load quote config from ${o}: HTTP ${t.status}`);
-        r = await t.json();
-      } catch (t) {
-        console.error("[NymrelQuoteLayer] Schema fetch error:", t), this.dispatchEvent(new CustomEvent("nymrel:error", { bubbles: !0, composed: !0, detail: { error: t.message } }));
-      }
-    else if (e) {
-      const t = f(e);
-      if (t)
-        r = t;
-      else
-        try {
-          r = JSON.parse(e);
-        } catch {
-          console.warn(`[NymrelQuoteLayer] Could not parse config attribute as JSON or preset name: "${e}". Using default roofing preset.`);
-        }
-    }
-    r && (r = {
-      ...r,
-      theme: {
-        ...r.theme,
-        mode: u
-      }
-    }), this.widgetInstance = new b(this, {
-      schema: r,
-      sourceLabel: l,
-      webhookUrl: i,
-      useShadowDom: d !== "light",
-      callbacks: {
-        onCalculate: (t, n) => {
-          this.dispatchEvent(new CustomEvent("nymrel:quote-calculated", {
-            bubbles: !0,
-            composed: !0,
-            detail: { quote: t, formState: n }
-          }));
-        },
-        onStepChange: (t, n) => {
-          this.dispatchEvent(new CustomEvent("nymrel:step-change", {
-            bubbles: !0,
-            composed: !0,
-            detail: { stepIndex: t, step: n }
-          }));
-        },
-        onSubmit: (t) => {
-          this.dispatchEvent(new CustomEvent("nymrel:lead-submitted", {
-            bubbles: !0,
-            composed: !0,
-            detail: { submission: t }
-          }));
-        },
-        onError: (t) => {
-          this.dispatchEvent(new CustomEvent("nymrel:error", {
-            bubbles: !0,
-            composed: !0,
-            detail: { error: typeof t == "string" ? t : t.message }
-          }));
-        }
-      }
-    });
-    const m = this.widgetInstance.recalculate();
-    this.dispatchEvent(new CustomEvent("nymrel:quote-calculated", {
-      bubbles: !0,
-      composed: !0,
-      detail: { quote: m, formState: {} }
-    }));
-  }
-  /**
-   * Public Programmatic Methods on the DOM Element
-   */
-  getWidget() {
-    return this.widgetInstance;
-  }
-  nextStep() {
-    var e;
-    return ((e = this.widgetInstance) == null ? void 0 : e.nextStep()) ?? !1;
-  }
-  prevStep() {
-    var e;
-    (e = this.widgetInstance) == null || e.prevStep();
-  }
-  reset() {
-    var e;
-    (e = this.widgetInstance) == null || e.reset();
-  }
-  recalculate() {
-    var e;
-    return (e = this.widgetInstance) == null ? void 0 : e.recalculate();
-  }
-}
-function E(s = "nymrel-quote-layer") {
-  typeof window < "u" && typeof customElements < "u" && (customElements.get(s) || customElements.define(s, w));
-}
-E();
-export {
-  A as DARK_THEME,
-  I as DEFAULT_WARM_THEME,
-  Q as LIGHT_THEME,
-  w as NymrelQuoteLayerElement,
-  b as NymrelQuoteWidget,
-  B as PRESET_REGISTRY,
-  T as QuoteWidget,
-  L as applyRounding,
-  W as calculateQuote,
-  x as createQuoteWidget,
-  M as emitAnalyticsEvent,
-  P as evaluateCondition,
-  R as extractAttribution,
-  q as formatCurrency,
-  D as generateCssVariables,
-  H as generateQuoteId,
-  N as getDeviceType,
-  f as getPreset,
-  _ as getReferringDomain,
-  F as getShadowStyles,
-  X as hvacPreset,
-  Z as plumbingPreset,
-  E as registerWebComponent,
-  U as resolveTheme,
-  p as roofingPreset,
-  $ as sanitizeInput,
-  ee as softwarePreset,
-  j as trackCtaClicked,
-  G as trackLeadSubmitted,
-  J as trackQuoteCalculated,
-  O as trackQuoteViewed,
-  V as trackStepCompleted,
-  z as useQuoteEngine,
-  K as validateField
+import { C as e, E as t, S as n, T as r, _ as i, a, b as o, c as s, d as c, f as l, g as u, h as d, i as f, l as p, m, n as h, o as g, p as _, r as v, s as y, t as b, u as x, v as S, w as C, x as w, y as T } from "./ReactQuoteWidget-8waIBoF_.js";
+import { a as E, i as D, n as O, o as k, r as A, t as j } from "./presets-dLAJB748.js";
+//#region src/web-component/NymrelQuoteLayer.ts
+var M = globalThis.HTMLElement ?? class {}, N = class extends M {
+	widgetInstance = null;
+	static get observedAttributes() {
+		return [
+			"config",
+			"src",
+			"webhook-url",
+			"source-label",
+			"theme-mode",
+			"mode"
+		];
+	}
+	connectedCallback() {
+		this.initWidget();
+	}
+	disconnectedCallback() {
+		this.widgetInstance = null;
+	}
+	attributeChangedCallback(e, t, n) {
+		t !== n && this.isConnected && this.initWidget();
+	}
+	async initWidget() {
+		let e = this.getAttribute("config"), t = this.getAttribute("src"), n = this.getAttribute("webhook-url") || void 0, r = this.getAttribute("source-label") || void 0, i = this.getAttribute("theme-mode") || "warm", a = this.getAttribute("mode") || "shadow", o = k;
+		if (t) try {
+			let e = await fetch(t);
+			if (!e.ok) throw Error(`Failed to load quote config from ${t}: HTTP ${e.status}`);
+			o = await e.json();
+		} catch (e) {
+			console.error("[NymrelQuoteLayer] Schema fetch error:", e), this.dispatchEvent(new CustomEvent("nymrel:error", {
+				bubbles: !0,
+				composed: !0,
+				detail: { error: e.message }
+			}));
+		}
+		else if (e) {
+			let t = O(e);
+			if (t) o = t;
+			else try {
+				o = JSON.parse(e);
+			} catch {
+				console.warn(`[NymrelQuoteLayer] Could not parse config attribute as JSON or preset name: "${e}". Using default roofing preset.`);
+			}
+		}
+		i && o && (o = {
+			...o,
+			theme: {
+				...o.theme,
+				mode: i
+			}
+		}), this.widgetInstance = new v(this, {
+			schema: o,
+			sourceLabel: r,
+			webhookUrl: n,
+			useShadowDom: a !== "light",
+			callbacks: {
+				onCalculate: (e, t) => {
+					this.dispatchEvent(new CustomEvent("nymrel:quote-calculated", {
+						bubbles: !0,
+						composed: !0,
+						detail: {
+							quote: e,
+							formState: t
+						}
+					}));
+				},
+				onStepChange: (e, t) => {
+					this.dispatchEvent(new CustomEvent("nymrel:step-change", {
+						bubbles: !0,
+						composed: !0,
+						detail: {
+							stepIndex: e,
+							step: t
+						}
+					}));
+				},
+				onSubmit: (e) => {
+					this.dispatchEvent(new CustomEvent("nymrel:lead-submitted", {
+						bubbles: !0,
+						composed: !0,
+						detail: { submission: e }
+					}));
+				},
+				onError: (e) => {
+					this.dispatchEvent(new CustomEvent("nymrel:error", {
+						bubbles: !0,
+						composed: !0,
+						detail: { error: typeof e == "string" ? e : e.message }
+					}));
+				}
+			}
+		});
+		let s = this.widgetInstance.recalculate();
+		this.dispatchEvent(new CustomEvent("nymrel:quote-calculated", {
+			bubbles: !0,
+			composed: !0,
+			detail: {
+				quote: s,
+				formState: {}
+			}
+		}));
+	}
+	getWidget() {
+		return this.widgetInstance;
+	}
+	nextStep() {
+		return this.widgetInstance?.nextStep() ?? !1;
+	}
+	prevStep() {
+		this.widgetInstance?.prevStep();
+	}
+	reset() {
+		this.widgetInstance?.reset();
+	}
+	recalculate() {
+		return this.widgetInstance?.recalculate();
+	}
 };
+function P(e = "nymrel-quote-layer") {
+	typeof window < "u" && typeof customElements < "u" && (customElements.get(e) || customElements.define(e, N));
+}
+//#endregion
+//#region src/web-component/index.ts
+P();
+//#endregion
+export { a as DARK_THEME, g as DEFAULT_WARM_THEME, y as LIGHT_THEME, N as NymrelQuoteLayerElement, v as NymrelQuoteWidget, j as PRESET_REGISTRY, b as QuoteWidget, o as applyRounding, w as calculateQuote, f as createQuoteWidget, c as emitAnalyticsEvent, n as evaluateCondition, l as extractAttribution, e as formatCurrency, s as generateCssVariables, C as generateQuoteId, _ as getDeviceType, O as getPreset, m as getReferringDomain, p as getShadowStyles, E as hvacPreset, D as plumbingPreset, P as registerWebComponent, x as resolveTheme, k as roofingPreset, r as sanitizeInput, A as softwarePreset, d as trackCtaClicked, u as trackLeadSubmitted, i as trackQuoteCalculated, S as trackQuoteViewed, T as trackStepCompleted, h as useQuoteEngine, t as validateField };
