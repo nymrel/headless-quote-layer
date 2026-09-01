@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NymrelQuoteWidget } from '../src/components/QuoteWidget';
-import type { QuoteSchema, WidgetCallbacks } from '../src/core/types';
+import type { LeadFormConfig, QuoteSchema, WidgetCallbacks } from '../src/core/types';
 
-function schema(overrides: Partial<QuoteSchema['leadForm']> = {}): QuoteSchema {
+function schema(overrides: Partial<LeadFormConfig> = {}): QuoteSchema {
   return {
     id: 'lead-contract',
     name: 'Lead delivery contract',
@@ -18,7 +18,7 @@ function schema(overrides: Partial<QuoteSchema['leadForm']> = {}): QuoteSchema {
 }
 
 function createWidget(
-  leadForm: Partial<QuoteSchema['leadForm']> = {},
+  leadForm: Partial<LeadFormConfig> = {},
   options: { webhookUrl?: string; callbacks?: WidgetCallbacks } = {},
 ): { target: HTMLDivElement; widget: NymrelQuoteWidget } {
   const target = document.createElement('div');
@@ -85,11 +85,9 @@ describe('lead delivery contract', () => {
       callbacks: { onError },
     });
 
-    // The escaped address reaches the current delivery path and keeps this
-    // regression focused on the webhook result rather than the regex defect.
     const submission = await widget.submitLead({
       name: 'Alex Example',
-      email: 'alex@example\\.com',
+      email: 'alex@example.com',
     });
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -109,7 +107,7 @@ describe('lead delivery contract', () => {
 
     const submission = await widget.submitLead({
       name: 'Alex Example',
-      email: 'alex@example\\.com',
+      email: 'alex@example.com',
     });
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -129,7 +127,7 @@ describe('lead delivery contract', () => {
 
     const submission = await widget.submitLead({
       name: 'Alex Example',
-      email: 'alex@example\\.com',
+      email: 'alex@example.com',
     });
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -141,7 +139,7 @@ describe('lead delivery contract', () => {
 
     const submission = await widget.submitLead({
       name: 'Alex Example',
-      email: 'alex@example\\.com',
+      email: 'alex@example.com',
     });
 
     expect(submission).not.toBeNull();
