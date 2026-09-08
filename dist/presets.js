@@ -183,8 +183,8 @@ const t = {
     requireAddress: !0,
     requireDate: !0,
     submitButtonText: "Confirm Quote & Book Inspection",
-    successTitle: "Quote Confirmed & Roofing Inspector Assigned!",
-    successMessage: "Your estimated quote has been saved. Our master roofer will confirm your consultation window shortly."
+    successTitle: "Roofing Estimate Captured",
+    successMessage: "Review your estimate and delivery status below. Print or save a copy for your records."
   }
 }, a = {
   id: "hvac-estimator-v1",

@@ -1,20 +1,20 @@
-var G = Object.defineProperty;
-var K = (t, e, r) => e in t ? G(t, e, { enumerable: !0, configurable: !0, writable: !0, value: r }) : t[e] = r;
-var E = (t, e, r) => K(t, typeof e != "symbol" ? e + "" : e, r);
-import { jsx as J } from "react/jsx-runtime";
-import { useRef as U, useEffect as H, useState as L, useCallback as P } from "react";
-function Z(t = "NYM") {
-  const e = /* @__PURE__ */ new Date(), r = e.getFullYear(), i = String(e.getMonth() + 1).padStart(2, "0"), a = String(e.getDate()).padStart(2, "0"), l = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `${t}-${r}${i}${a}-${l}`;
+var Z = Object.defineProperty;
+var X = (t, e, r) => e in t ? Z(t, e, { enumerable: !0, configurable: !0, writable: !0, value: r }) : t[e] = r;
+var $ = (t, e, r) => X(t, typeof e != "symbol" ? e + "" : e, r);
+import { jsx as ee } from "react/jsx-runtime";
+import { useRef as H, useEffect as U, useState as A, useCallback as P } from "react";
+function te(t = "NYM") {
+  const e = /* @__PURE__ */ new Date(), r = e.getFullYear(), i = String(e.getMonth() + 1).padStart(2, "0"), a = String(e.getDate()).padStart(2, "0"), d = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `${t}-${r}${i}${a}-${d}`;
 }
 function I(t, e = "USD", r = "$", i = 0) {
   if (isNaN(t) || t === null || t === void 0)
     return `${r}0`;
-  const l = (i > 0 ? t.toFixed(i) : Math.round(t).toString()).split(".");
-  return l[0] = l[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${r}${l.join(".")}`;
+  const d = (i > 0 ? t.toFixed(i) : Math.round(t).toString()).split(".");
+  return d[0] = d[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${r}${d.join(".")}`;
 }
-function w(t) {
-  return t == null ? t : typeof t == "string" ? t.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<[^>]*>/g, "").replace(/[<>]/g, "").trim() : typeof t == "number" ? isNaN(t) ? 0 : t : Array.isArray(t) ? t.map(w) : t;
+function k(t) {
+  return t == null ? t : typeof t == "string" ? t.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<[^>]*>/g, "").replace(/[<>]/g, "").trim() : typeof t == "number" ? isNaN(t) ? 0 : t : Array.isArray(t) ? t.map(k) : t;
 }
 function j(t, e) {
   if (!t || !t.fieldId) return !0;
@@ -59,7 +59,7 @@ function O(t, e) {
   }
   return { valid: !0 };
 }
-function R(t, e) {
+function q(t, e) {
   if (!e || e === "none") return t;
   switch (e) {
     case "round":
@@ -78,51 +78,51 @@ function R(t, e) {
       return t;
   }
 }
-function N(t, e) {
-  var A, D;
-  const r = ((A = t.pricing) == null ? void 0 : A.currency) || "USD", i = ((D = t.pricing) == null ? void 0 : D.currencySymbol) || "$", a = t.pricing || {}, l = e._quoteId || Z(), c = [];
+function Q(t, e) {
+  var S, v;
+  const r = ((S = t.pricing) == null ? void 0 : S.currency) || "USD", i = ((v = t.pricing) == null ? void 0 : v.currencySymbol) || "$", a = t.pricing || {}, d = e._quoteId || te(), u = [];
   if (t.steps.forEach((s) => {
-    s.fields.forEach((F) => {
-      c.push(F);
+    s.fields.forEach((E) => {
+      u.push(E);
     });
   }), a.formula === "custom" && typeof a.customFormula == "function") {
-    const s = a.customFormula(e, c), F = R(s.target, a.rounding), h = R(s.min, a.rounding), p = R(s.max, a.rounding);
+    const s = a.customFormula(e, u), E = q(s.target, a.rounding), h = q(s.min, a.rounding), p = q(s.max, a.rounding);
     return {
       min: h,
       max: p,
-      target: F,
+      target: E,
       formattedMin: I(h, r, i),
       formattedMax: I(p, r, i),
-      formattedTarget: I(F, r, i),
+      formattedTarget: I(E, r, i),
       currency: r,
       currencySymbol: i,
       breakdown: s.breakdown || [],
       recommendations: [],
       calculatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      quoteId: l
+      quoteId: d
     };
   }
-  let m = Number(a.baseFee || a.baseCalloutFee || 0), o = 0, d = 0, x = 0, v = 1;
-  const u = [], b = [];
-  m > 0 && u.push({
+  let c = Number(a.baseFee || a.baseCalloutFee || 0), o = 0, l = 0, x = 0, w = 1;
+  const m = [], b = [];
+  c > 0 && m.push({
     id: "base-fee",
     label: "Base Callout / Setup Fee",
-    amount: m,
-    formattedAmount: I(m, r, i),
+    amount: c,
+    formattedAmount: I(c, r, i),
     type: "base",
     description: "Standard initial mobilization and inspection base"
   });
-  for (const s of c) {
+  for (const s of u) {
     if (!j(s.condition, e))
       continue;
-    const F = e[s.id] !== void 0 ? e[s.id] : s.defaultValue;
-    if (!(F == null || F === "")) {
+    const E = e[s.id] !== void 0 ? e[s.id] : s.defaultValue;
+    if (!(E == null || E === "")) {
       if (s.type === "number" || s.type === "slider" || s.type === "stepper") {
-        const h = Number(F);
+        const h = Number(E);
         if (!isNaN(h) && h > 0) {
           if (s.unitPrice && s.unitPrice > 0) {
             const p = h * s.unitPrice;
-            s.category === "material" ? o += p : d += p, u.push({
+            s.category === "material" ? o += p : l += p, m.push({
               id: s.id,
               label: `${s.label} (${h} ${s.unit || "units"} @ ${I(s.unitPrice, r, i)}/${s.unit || "unit"})`,
               amount: p,
@@ -130,15 +130,15 @@ function N(t, e) {
               type: s.category === "material" ? "material" : "labor"
             });
           }
-          s.multiplier && s.multiplier !== 1 && (v *= s.multiplier);
+          s.multiplier && s.multiplier !== 1 && (w *= s.multiplier);
         }
       }
       if ((s.type === "select" || s.type === "radio" || s.type === "toggle") && s.options && s.options.length > 0) {
-        const h = s.options.find((p) => String(p.id) === String(F) || String(p.value) === String(F));
+        const h = s.options.find((p) => String(p.id) === String(E) || String(p.value) === String(E));
         if (h) {
           if (h.adder && Number(h.adder) !== 0) {
             const p = Number(h.adder);
-            x += p, u.push({
+            x += p, m.push({
               id: `${s.id}-${h.id}`,
               label: `${s.label}: ${h.label}`,
               amount: p,
@@ -149,7 +149,7 @@ function N(t, e) {
           }
           if (h.multiplier && Number(h.multiplier) !== 1) {
             const p = Number(h.multiplier);
-            v *= p, u.push({
+            w *= p, m.push({
               id: `${s.id}-${h.id}-mult`,
               label: `${h.label} Factor (${p}x)`,
               amount: 0,
@@ -161,38 +161,38 @@ function N(t, e) {
         }
       }
       if (s.type === "checkbox")
-        if (Array.isArray(F) && s.options)
-          for (const h of F) {
-            const p = s.options.find((q) => String(q.id) === String(h) || String(q.value) === String(h));
+        if (Array.isArray(E) && s.options)
+          for (const h of E) {
+            const p = s.options.find((M) => String(M.id) === String(h) || String(M.value) === String(h));
             if (p) {
               if (p.adder && Number(p.adder) !== 0) {
-                const q = Number(p.adder);
-                x += q, u.push({
+                const M = Number(p.adder);
+                x += M, m.push({
                   id: `${s.id}-${p.id}`,
                   label: p.label,
-                  amount: q,
-                  formattedAmount: I(q, r, i),
+                  amount: M,
+                  formattedAmount: I(M, r, i),
                   type: "addon",
                   description: p.description
                 });
               }
-              p.multiplier && Number(p.multiplier) !== 1 && (v *= Number(p.multiplier));
+              p.multiplier && Number(p.multiplier) !== 1 && (w *= Number(p.multiplier));
             }
           }
-        else typeof F == "boolean" && F === !0 && (s.unitPrice && (x += s.unitPrice, u.push({
+        else typeof E == "boolean" && E === !0 && (s.unitPrice && (x += s.unitPrice, m.push({
           id: s.id,
           label: s.label,
           amount: s.unitPrice,
           formattedAmount: I(s.unitPrice, r, i),
           type: "addon"
-        })), s.multiplier && s.multiplier !== 1 && (v *= s.multiplier));
+        })), s.multiplier && s.multiplier !== 1 && (w *= s.multiplier));
     }
   }
-  const f = m + o + d + x;
-  let g = f * v;
+  const f = c + o + l + x;
+  let g = f * w;
   if (a.taxRate && a.taxRate > 0) {
     const s = g * a.taxRate;
-    u.push({
+    m.push({
       id: "tax",
       label: `Estimated Tax (${(a.taxRate * 100).toFixed(1)}%)`,
       amount: s,
@@ -200,34 +200,34 @@ function N(t, e) {
       type: "tax"
     }), g += s;
   }
-  const C = a.marginPercent ? a.marginPercent / 100 : 0.1, z = a.minRangeSpreadPercent ? a.minRangeSpreadPercent / 100 : C, M = a.maxRangeSpreadPercent ? a.maxRangeSpreadPercent / 100 : C;
-  let _ = Math.max(0, g), B = Math.max(0, _ * (1 - z)), y = Math.max(B, _ * (1 + M));
-  f === 0 && m === 0 && (_ = 0, B = 0, y = 0);
-  const $ = R(_, a.rounding), S = R(B, a.rounding), k = R(y, a.rounding);
-  return (e.pitch === "steep" || e.difficulty === "extreme" || e.urgency === "emergency") && b.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), $ > 5e3 && b.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (e.material === "metal" || e.efficiency === "ultra") && b.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
-    min: S,
-    max: k,
-    target: $,
-    formattedMin: I(S, r, i),
-    formattedMax: I(k, r, i),
-    formattedTarget: I($, r, i),
+  const C = a.marginPercent ? a.marginPercent / 100 : 0.1, L = a.minRangeSpreadPercent ? a.minRangeSpreadPercent / 100 : C, R = a.maxRangeSpreadPercent ? a.maxRangeSpreadPercent / 100 : C;
+  let _ = Math.max(0, g), z = Math.max(0, _ * (1 - L)), N = Math.max(z, _ * (1 + R));
+  f === 0 && c === 0 && (_ = 0, z = 0, N = 0);
+  const T = q(_, a.rounding), y = q(z, a.rounding), F = q(N, a.rounding);
+  return (e.pitch === "steep" || e.difficulty === "extreme" || e.urgency === "emergency") && b.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), T > 5e3 && b.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (e.material === "metal" || e.efficiency === "ultra") && b.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
+    min: y,
+    max: F,
+    target: T,
+    formattedMin: I(y, r, i),
+    formattedMax: I(F, r, i),
+    formattedTarget: I(T, r, i),
     currency: r,
     currencySymbol: i,
-    breakdown: u,
+    breakdown: m,
     recommendations: b,
     calculatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-    quoteId: l
+    quoteId: d
   };
 }
-function Q() {
+function D() {
   return "sess_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
-function X() {
+function re() {
   if (typeof window > "u") return "desktop";
   const t = navigator.userAgent.toLowerCase(), e = window.innerWidth || 1024;
   return /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(t) || e >= 768 && e <= 1024 ? "tablet" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(t) || e < 768 ? "mobile" : "desktop";
 }
-function ee(t) {
+function ne(t) {
   if (!t) return "";
   try {
     return new URL(t).hostname;
@@ -236,76 +236,76 @@ function ee(t) {
   }
 }
 function V(t = {}) {
-  const e = typeof window < "u", r = e ? new URLSearchParams(window.location.search) : new URLSearchParams(), i = e && document.referrer || "", a = e && window.location.href || "", l = e && document.title || "", c = e && navigator.userAgent || "";
-  let m = t.customSessionId || "";
-  if (!m && e) {
-    const M = t.storageKey || "nymrel_quote_session_id";
+  const e = typeof window < "u", r = e ? new URLSearchParams(window.location.search) : new URLSearchParams(), i = e && document.referrer || "", a = e && window.location.href || "", d = e && document.title || "", u = e && navigator.userAgent || "";
+  let c = t.customSessionId || "";
+  if (!c && e) {
+    const R = t.storageKey || "nymrel_quote_session_id";
     try {
-      m = window.sessionStorage.getItem(M) || "", m || (m = Q(), window.sessionStorage.setItem(M, m));
+      c = window.sessionStorage.getItem(R) || "", c || (c = D(), window.sessionStorage.setItem(R, c));
     } catch {
-      m = Q();
+      c = D();
     }
-  } else m || (m = Q());
-  const o = r.get("utm_source") || void 0, d = r.get("utm_medium") || void 0, x = r.get("utm_campaign") || void 0, v = r.get("utm_term") || void 0, u = r.get("utm_content") || void 0, b = r.get("gclid") || void 0, f = r.get("fbclid") || void 0, g = r.get("msclkid") || void 0, C = r.get("ttclid") || void 0, z = r.get("li_fat_id") || void 0;
+  } else c || (c = D());
+  const o = r.get("utm_source") || void 0, l = r.get("utm_medium") || void 0, x = r.get("utm_campaign") || void 0, w = r.get("utm_term") || void 0, m = r.get("utm_content") || void 0, b = r.get("gclid") || void 0, f = r.get("fbclid") || void 0, g = r.get("msclkid") || void 0, C = r.get("ttclid") || void 0, L = r.get("li_fat_id") || void 0;
   return {
     utm_source: o,
-    utm_medium: d,
+    utm_medium: l,
     utm_campaign: x,
-    utm_term: v,
-    utm_content: u,
+    utm_term: w,
+    utm_content: m,
     gclid: b,
     fbclid: f,
     msclkid: g,
     ttclid: C,
-    li_fat_id: z,
+    li_fat_id: L,
     referrer: i,
-    referring_domain: ee(i),
+    referring_domain: ne(i),
     landing_page: a,
-    page_title: l,
+    page_title: d,
     timestamp: (/* @__PURE__ */ new Date()).toISOString(),
     source_label: t.sourceLabel,
-    session_id: m,
-    device_type: X(),
-    userAgent: c
+    session_id: c,
+    device_type: re(),
+    userAgent: u
   };
 }
-function T(t, e = {}, r = {}) {
+function B(t, e = {}, r = {}) {
   if (typeof window > "u") return;
-  const i = r.pushToDataLayer !== !1, a = r.useGtag !== !1, l = r.dispatchDomEvent !== !1, m = `${r.prefix || "nymrel_quote"}_${t}`, o = {
-    event: m,
+  const i = r.pushToDataLayer !== !1, a = r.useGtag !== !1, d = r.dispatchDomEvent !== !1, c = `${r.prefix || "nymrel_quote"}_${t}`, o = {
+    event: c,
     ...e,
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   };
   if (i) {
-    const d = window;
-    d.dataLayer = d.dataLayer || [], d.dataLayer.push(o);
+    const l = window;
+    l.dataLayer = l.dataLayer || [], l.dataLayer.push(o);
   }
   if (a) {
-    const d = window;
-    typeof d.gtag == "function" && d.gtag("event", m, e);
+    const l = window;
+    typeof l.gtag == "function" && l.gtag("event", c, e);
   }
-  if (l)
+  if (d)
     try {
-      const d = new CustomEvent(m, {
+      const l = new CustomEvent(c, {
         bubbles: !0,
         cancelable: !0,
         detail: o
       });
-      window.dispatchEvent(d);
+      window.dispatchEvent(l);
     } catch {
     }
 }
-function te(t, e) {
-  T("viewed", { schemaId: t, ...e });
+function ae(t, e) {
+  B("viewed", { schemaId: t, ...e });
 }
-function re(t, e, r, i) {
-  T("step_completed", { schemaId: t, stepIndex: e, stepTitle: r, timeSpentMs: i });
+function ie(t, e, r, i) {
+  B("step_completed", { schemaId: t, stepIndex: e, stepTitle: r, timeSpentMs: i });
 }
-function ne(t, e, r, i, a) {
-  T("calculated", { schemaId: t, target: e, min: r, max: i, quoteId: a });
+function se(t, e, r, i, a) {
+  B("calculated", { schemaId: t, target: e, min: r, max: i, quoteId: a });
 }
-function W(t, e, r, i) {
-  T("lead_submitted", {
+function Y(t, e, r, i) {
+  B("lead_submitted", {
     schemaId: t,
     quoteId: e,
     value: r,
@@ -313,10 +313,10 @@ function W(t, e, r, i) {
     hasEmail: !!i
   });
 }
-function pe(t, e, r) {
-  T("cta_clicked", { schemaId: t, ctaName: e, quoteId: r });
+function fe(t, e, r) {
+  B("cta_clicked", { schemaId: t, ctaName: e, quoteId: r });
 }
-const ae = {
+const oe = {
   mode: "warm",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
   primaryColor: "#2A332E",
@@ -340,7 +340,7 @@ const ae = {
   borderRadius: "14px",
   boxShadow: "0 8px 30px -4px rgba(42, 51, 46, 0.08), 0 2px 8px -2px rgba(42, 51, 46, 0.04)",
   focusRingColor: "rgba(168, 84, 31, 0.28)"
-}, ie = {
+}, le = {
   mode: "light",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   primaryColor: "#0F172A",
@@ -355,7 +355,7 @@ const ae = {
   borderRadius: "12px",
   boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.06)",
   focusRingColor: "rgba(37, 99, 235, 0.25)"
-}, se = {
+}, de = {
   mode: "dark",
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   primaryColor: "#F1F5F9",
@@ -371,13 +371,13 @@ const ae = {
   boxShadow: "0 8px 30px -4px rgba(0, 0, 0, 0.4)",
   focusRingColor: "rgba(249, 115, 22, 0.3)"
 };
-function oe(t) {
+function ce(t) {
   return {
-    ...(t == null ? void 0 : t.mode) === "dark" ? se : (t == null ? void 0 : t.mode) === "light" ? ie : ae,
+    ...(t == null ? void 0 : t.mode) === "dark" ? de : (t == null ? void 0 : t.mode) === "light" ? le : oe,
     ...t
   };
 }
-function le(t) {
+function me(t) {
   return `
     --nym-font: ${t.fontFamily};
     --nym-primary: ${t.primaryColor};
@@ -396,8 +396,8 @@ function le(t) {
     --nym-error: #B83A2C;
   `;
 }
-function de(t) {
-  const e = oe(t);
+function ue(t) {
+  const e = ce(t);
   return `
     :host {
       display: block;
@@ -407,7 +407,7 @@ function de(t) {
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      ${le(e)}
+      ${me(e)}
     }
 
     *, *::before, *::after {
@@ -1133,42 +1133,98 @@ function de(t) {
     }
   `;
 }
+function W(t = (/* @__PURE__ */ new Date()).toISOString()) {
+  return {
+    status: "not_configured",
+    channel: "none",
+    attemptedAt: t,
+    message: "Local capture only: no delivery destination is configured, so nothing was sent."
+  };
+}
+function G(t = (/* @__PURE__ */ new Date()).toISOString()) {
+  return {
+    status: "callback_only",
+    channel: "callback",
+    attemptedAt: t,
+    message: "Captured locally and handed to this page. No external delivery was attempted."
+  };
+}
+async function K(t, e) {
+  const r = (/* @__PURE__ */ new Date()).toISOString();
+  try {
+    const i = await fetch(t, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Nymrel-Quote-Id": e.quoteId
+      },
+      body: JSON.stringify(e)
+    });
+    return i.ok ? {
+      status: "accepted",
+      channel: "webhook",
+      attemptedAt: r,
+      httpStatus: i.status,
+      ok: !0,
+      message: "Your quote was accepted by the destination."
+    } : {
+      status: "rejected",
+      channel: "webhook",
+      attemptedAt: r,
+      httpStatus: i.status,
+      ok: !1,
+      message: `Delivery failed: the destination declined this quote (HTTP ${i.status}). Your quote is shown below for your records.`
+    };
+  } catch {
+    return {
+      status: "failed",
+      channel: "webhook",
+      attemptedAt: r,
+      ok: !1,
+      message: "Delivery failed: could not reach the destination. Your quote is shown below for your records."
+    };
+  }
+}
+function pe(t) {
+  return t ? t.message : W().message;
+}
 function n(t) {
   return t == null ? "" : String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-class Y {
+class J {
   constructor(e, r) {
-    E(this, "container");
-    E(this, "schema");
-    E(this, "callbacks");
-    E(this, "formState", {});
-    E(this, "currentStepIndex", 0);
-    E(this, "currentQuote");
-    E(this, "showBreakdownModal", !1);
-    E(this, "isSubmitted", !1);
-    E(this, "isSubmitting", !1);
-    E(this, "lastSubmission", null);
-    E(this, "sourceLabel");
-    E(this, "webhookUrl");
-    E(this, "fieldErrors", {});
-    E(this, "stepStartTime", Date.now());
+    $(this, "container");
+    $(this, "schema");
+    $(this, "callbacks");
+    $(this, "formState", {});
+    $(this, "currentStepIndex", 0);
+    $(this, "currentQuote");
+    $(this, "showBreakdownModal", !1);
+    $(this, "isSubmitted", !1);
+    $(this, "isSubmitting", !1);
+    $(this, "lastSubmission", null);
+    $(this, "lastDeliveryReceipt", null);
+    $(this, "sourceLabel");
+    $(this, "webhookUrl");
+    $(this, "fieldErrors", {});
+    $(this, "stepStartTime", Date.now());
     this.schema = r.schema, this.callbacks = r.callbacks || {}, this.sourceLabel = r.sourceLabel || this.schema.sourceLabel, this.webhookUrl = r.webhookUrl || this.schema.webhookUrl, this.schema.steps.forEach((i) => {
       i.fields.forEach((a) => {
         a.defaultValue !== void 0 && (this.formState[a.id] = a.defaultValue);
       });
-    }), r.initialState && (this.formState = { ...this.formState, ...r.initialState }), r.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? this.container = e.shadowRoot : this.container = e.attachShadow({ mode: "open" }) : this.container = e, this.currentQuote = N(this.schema, this.formState), te(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
+    }), r.initialState && (this.formState = { ...this.formState, ...r.initialState }), r.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? this.container = e.shadowRoot : this.container = e.attachShadow({ mode: "open" }) : this.container = e, this.currentQuote = Q(this.schema, this.formState), ae(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
   }
   /**
    * Update Form State and trigger reactive recalculation
    */
   updateState(e, r) {
-    this.formState[e] = w(r), delete this.fieldErrors[e], this.recalculate();
+    this.formState[e] = k(r), delete this.fieldErrors[e], this.recalculate();
   }
   /**
    * Recalculate quote
    */
   recalculate() {
-    return this.currentQuote = N(this.schema, this.formState), ne(
+    return this.currentQuote = Q(this.schema, this.formState), se(
       this.schema.id,
       this.currentQuote.target,
       this.currentQuote.min,
@@ -1184,15 +1240,15 @@ class Y {
       const r = this.schema.steps[this.currentStepIndex];
       let i = !1;
       this.fieldErrors = {};
-      for (const l of r.fields) {
-        if (!j(l.condition, this.formState)) continue;
-        const c = O(l, this.formState[l.id]);
-        c.valid || (this.fieldErrors[l.id] = c.error || "Invalid value", i = !0);
+      for (const d of r.fields) {
+        if (!j(d.condition, this.formState)) continue;
+        const u = O(d, this.formState[d.id]);
+        u.valid || (this.fieldErrors[d.id] = u.error || "Invalid value", i = !0);
       }
       if (i)
         return this.render(), !1;
       const a = Date.now() - this.stepStartTime;
-      if (re(this.schema.id, this.currentStepIndex, r.title, a), this.currentStepIndex < this.schema.steps.length - 1)
+      if (ie(this.schema.id, this.currentStepIndex, r.title, a), this.currentStepIndex < this.schema.steps.length - 1)
         return this.currentStepIndex++, this.stepStartTime = Date.now(), this.callbacks.onStepChange && this.callbacks.onStepChange(this.currentStepIndex, this.schema.steps[this.currentStepIndex]), this.render(), !0;
       if (this.isLeadFormEnabled())
         return this.currentStepIndex++, this.stepStartTime = Date.now(), this.render(), !0;
@@ -1219,59 +1275,79 @@ class Y {
    * Submit lead capture and finalize quote
    */
   async submitLead(e) {
+    var u, c, o;
     const r = this.schema.leadForm;
     this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required.");
-    const i = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    const i = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if ((!e.email || !i.test(String(e.email))) && (this.fieldErrors.lead_email = "A valid email address is required."), r != null && r.requirePhone) {
-      const c = /^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$/;
-      (!e.phone || !c.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required.");
+      const l = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+      (!e.phone || !l.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required.");
     }
     if (r != null && r.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0)
       return this.render(), null;
     this.isSubmitting = !0, this.render();
-    const a = V({ sourceLabel: this.sourceLabel }), l = {
+    const a = V({ sourceLabel: this.sourceLabel }), d = {
       quoteId: this.currentQuote.quoteId,
       schemaId: this.schema.id,
       schemaName: this.schema.name,
       quote: this.currentQuote,
       formState: { ...this.formState },
       lead: {
-        name: w(e.name),
-        email: w(e.email),
-        phone: w(e.phone || ""),
-        address: w(e.address || ""),
-        zipCode: w(e.zipCode || ""),
-        preferredDate: w(e.preferredDate || ""),
-        preferredTime: w(e.preferredTime || ""),
-        notes: w(e.notes || "")
+        name: k(e.name),
+        email: k(e.email),
+        phone: k(e.phone || ""),
+        address: k(e.address || ""),
+        zipCode: k(e.zipCode || ""),
+        preferredDate: k(e.preferredDate || ""),
+        preferredTime: k(e.preferredTime || ""),
+        notes: k(e.notes || "")
       },
       attribution: a,
       submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
       metadata: this.schema.metadata
     };
     try {
-      if (this.webhookUrl)
+      if (this.webhookUrl) {
+        const l = await K(this.webhookUrl, d);
+        (l.status === "rejected" || l.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", l.message), d.delivery = l;
+      } else
+        d.delivery = this.callbacks.onSubmit ? G() : W();
+      if (this.callbacks.onSubmit)
         try {
-          await fetch(this.webhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Nymrel-Quote-Id": l.quoteId
-            },
-            body: JSON.stringify(l)
+          await this.callbacks.onSubmit(d);
+        } catch (l) {
+          d.localHandlingFailed = !0, ((u = d.delivery) == null ? void 0 : u.channel) === "callback" && (d.delivery = {
+            ...d.delivery,
+            status: "failed",
+            ok: !1,
+            message: "The page handler failed. No external delivery was attempted by the widget. Your quote is shown below."
           });
-        } catch (c) {
-          console.warn("[NymrelQuote] Webhook delivery notice:", c);
+          try {
+            (o = (c = this.callbacks).onError) == null || o.call(c, l);
+          } catch {
+          }
         }
-      return this.callbacks.onSubmit && await this.callbacks.onSubmit(l), W(
-        this.schema.id,
-        l.quoteId,
-        this.currentQuote.target,
-        l.lead.email
-      ), this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = l, this.render(), l;
-    } catch (c) {
-      return this.isSubmitting = !1, this.callbacks.onError && this.callbacks.onError(c), this.fieldErrors._global = "Submission failed. Please check your connection and try again.", this.render(), null;
+      try {
+        Y(
+          this.schema.id,
+          d.quoteId,
+          this.currentQuote.target,
+          d.lead.email
+        );
+      } catch {
+      }
+      return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = d, this.lastDeliveryReceipt = d.delivery ?? null, this.render(), d;
+    } catch (l) {
+      return this.isSubmitting = !1, this.callbacks.onError && this.callbacks.onError(l), this.fieldErrors._global = "Submission failed. Please check your connection and try again.", this.render(), null;
     }
+  }
+  /**
+   * Truthful delivery receipt for the most recent submission.
+   * Null before any submission; cleared by reset().
+   * Only `status === 'accepted'` reflects a verified (2xx) webhook response.
+   */
+  getLastDeliveryReceipt() {
+    return this.lastDeliveryReceipt;
   }
   /**
    * Reset Quote to initial state
@@ -1281,7 +1357,7 @@ class Y {
       e.fields.forEach((r) => {
         r.defaultValue !== void 0 && (this.formState[r.id] = r.defaultValue);
       });
-    }), this.currentStepIndex = 0, this.isSubmitted = !1, this.isSubmitting = !1, this.lastSubmission = null, this.fieldErrors = {}, this.recalculate();
+    }), this.currentStepIndex = 0, this.isSubmitted = !1, this.isSubmitting = !1, this.lastSubmission = null, this.lastDeliveryReceipt = null, this.fieldErrors = {}, this.recalculate();
   }
   /**
    * Print or Download summary receipt
@@ -1293,8 +1369,8 @@ class Y {
    * Render complete DOM tree into container
    */
   render() {
-    var l;
-    const e = de(this.schema.theme);
+    var d;
+    const e = ue(this.schema.theme);
     let r = "";
     this.isSubmitted && this.lastSubmission ? r = this.renderSuccessScreen(this.lastSubmission) : this.isLeadFormStep() ? r = this.renderLeadFormStep() : r = this.renderStepForm(this.schema.steps[this.currentStepIndex]);
     const i = this.showBreakdownModal ? this.renderBreakdownModal() : "", a = `
@@ -1328,14 +1404,14 @@ class Y {
 
         <!-- Stepper Progress Dots -->
         <div class="nym-stepper" aria-label="Quote Progress">
-          ${Array.from({ length: this.getTotalStepsCount() }).map((c, m) => {
+          ${Array.from({ length: this.getTotalStepsCount() }).map((u, c) => {
       let o = "nym-step-dot";
-      return m === this.currentStepIndex && (o += " active"), m < this.currentStepIndex && (o += " completed"), `<div class="${o}"></div>`;
+      return c === this.currentStepIndex && (o += " active"), c < this.currentStepIndex && (o += " completed"), `<div class="${o}"></div>`;
     }).join("")}
         </div>
         <div class="nym-step-legend">
           <span>Step ${this.currentStepIndex + 1} of ${this.getTotalStepsCount()}</span>
-          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : n(((l = this.schema.steps[this.currentStepIndex]) == null ? void 0 : l.title) || "")}</span>
+          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : n(((d = this.schema.steps[this.currentStepIndex]) == null ? void 0 : d.title) || "")}</span>
         </div>
 
         <!-- Main Step Form Content -->
@@ -1344,10 +1420,10 @@ class Y {
         <!-- Recommendations Box if available -->
         ${this.currentQuote.recommendations.length > 0 && !this.isSubmitted ? `
           <div class="nym-recommendations">
-            ${this.currentQuote.recommendations.map((c) => `
+            ${this.currentQuote.recommendations.map((u) => `
               <div class="nym-recommendation-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>${n(c)}</span>
+                <span>${n(u)}</span>
               </div>
             `).join("")}
           </div>
@@ -1399,29 +1475,29 @@ class Y {
    * Render Individual Field Controls
    */
   renderField(e) {
-    var l, c, m;
+    var d, u, c;
     if (!j(e.condition, this.formState))
       return "";
     const r = this.formState[e.id] !== void 0 ? this.formState[e.id] : e.defaultValue ?? "", i = this.fieldErrors[e.id];
     let a = "";
     switch (e.type) {
       case "slider": {
-        const o = e.min ?? 100, d = e.max ?? 5e3, x = e.step ?? 50, v = Number(r) || o;
+        const o = e.min ?? 100, l = e.max ?? 5e3, x = e.step ?? 50, w = Number(r) || o;
         a = `
           <div class="nym-slider-container">
             <div class="nym-slider-header">
               <span class="nym-slider-ticks">${o} ${e.unit || ""}</span>
-              <span class="nym-slider-val" id="val-${e.id}">${v} ${e.unit || ""}</span>
-              <span class="nym-slider-ticks">${d} ${e.unit || ""}</span>
+              <span class="nym-slider-val" id="val-${e.id}">${w} ${e.unit || ""}</span>
+              <span class="nym-slider-ticks">${l} ${e.unit || ""}</span>
             </div>
             <input 
               type="range" 
               class="nym-slider nym-reactive-input" 
               data-field-id="${e.id}" 
               min="${o}" 
-              max="${d}" 
+              max="${l}" 
               step="${x}" 
-              value="${v}"
+              value="${w}"
               aria-label="${n(e.label)}"
             />
           </div>
@@ -1431,7 +1507,7 @@ class Y {
       case "select": {
         a = `
           <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${n(e.label)}">
-            ${(l = e.options) == null ? void 0 : l.map((o) => `
+            ${(d = e.options) == null ? void 0 : d.map((o) => `
               <option value="${n(o.id)}" ${String(r) === String(o.id) ? "selected" : ""}>
                 ${n(o.label)} ${o.adder ? `(+${this.currentQuote.currencySymbol}${o.adder})` : ""} ${o.multiplier ? `(${o.multiplier}x)` : ""}
               </option>
@@ -1443,15 +1519,15 @@ class Y {
       case "radio": {
         a = `
           <div class="nym-options-grid" role="radiogroup" aria-label="${n(e.label)}">
-            ${(c = e.options) == null ? void 0 : c.map((o) => {
-          const d = String(r) === String(o.id);
+            ${(u = e.options) == null ? void 0 : u.map((o) => {
+          const l = String(r) === String(o.id);
           return `
                 <div 
-                  class="nym-option-card ${d ? "selected" : ""}" 
+                  class="nym-option-card ${l ? "selected" : ""}" 
                   data-field-id="${e.id}" 
                   data-option-id="${n(o.id)}"
                   role="radio"
-                  aria-checked="${d}"
+                  aria-checked="${l}"
                   tabindex="0"
                 >
                   <div class="nym-option-header">
@@ -1476,13 +1552,13 @@ class Y {
         const o = Array.isArray(r) ? r : [];
         a = `
           <div class="nym-checkbox-list">
-            ${(m = e.options) == null ? void 0 : m.map((d) => {
-          const x = o.includes(d.id);
+            ${(c = e.options) == null ? void 0 : c.map((l) => {
+          const x = o.includes(l.id);
           return `
                 <div 
                   class="nym-checkbox-item ${x ? "checked" : ""}" 
                   data-field-id="${e.id}" 
-                  data-checkbox-id="${n(d.id)}"
+                  data-checkbox-id="${n(l.id)}"
                   role="checkbox"
                   aria-checked="${x}"
                   tabindex="0"
@@ -1492,10 +1568,10 @@ class Y {
                   </div>
                   <div class="nym-checkbox-info">
                     <div class="nym-checkbox-title">
-                      <span>${n(d.label)}</span>
-                      ${d.adder ? `<span>+${this.currentQuote.currencySymbol}${d.adder}</span>` : ""}
+                      <span>${n(l.label)}</span>
+                      ${l.adder ? `<span>+${this.currentQuote.currencySymbol}${l.adder}</span>` : ""}
                     </div>
-                    ${d.description ? `<div class="nym-checkbox-desc">${n(d.description)}</div>` : ""}
+                    ${l.description ? `<div class="nym-checkbox-desc">${n(l.description)}</div>` : ""}
                   </div>
                 </div>
               `;
@@ -1632,14 +1708,20 @@ class Y {
    * Render Success / Receipt Confirmation Screen
    */
   renderSuccessScreen(e) {
-    const r = this.schema.leadForm;
+    var a;
+    const r = this.schema.leadForm, i = ((a = e.delivery) == null ? void 0 : a.status) === "accepted" && !e.localHandlingFailed;
     return `
       <div class="nym-success-screen">
         <div class="nym-success-icon">✓</div>
-        <h3 class="nym-step-title">${n((r == null ? void 0 : r.successTitle) || "Estimate Successfully Saved & Confirmed!")}</h3>
-        <p class="nym-step-subtitle">${n((r == null ? void 0 : r.successMessage) || "A detailed quote confirmation and project summary have been dispatched to your email.")}</p>
+        <h3 class="nym-step-title">${n(i && (r == null ? void 0 : r.successTitle) || "Estimate Captured Successfully!")}</h3>
+        <p class="nym-step-subtitle">${n(i && (r == null ? void 0 : r.successMessage) || "Your quote summary is below. Print or save a copy for your records.")}</p>
+        ${e.localHandlingFailed ? '<p role="alert">The page handler failed after capture. The delivery status below records the observed outcome.</p>' : ""}
 
         <div class="nym-receipt-card">
+          <div class="nym-delivery-status nym-receipt-row" role="status">
+            <span class="nym-receipt-key">Delivery Status:</span>
+            <span class="nym-receipt-val">${n(pe(this.lastDeliveryReceipt))}</span>
+          </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Quote Reference ID:</span>
             <span class="nym-receipt-val" style="font-family: monospace;">${n(e.quoteId)}</span>
@@ -1720,8 +1802,8 @@ class Y {
    * Attach Interactive Event Listeners
    */
   attachEventListeners() {
-    this.container.querySelectorAll(".nym-reactive-input").forEach((u) => {
-      u.addEventListener("input", (b) => {
+    this.container.querySelectorAll(".nym-reactive-input").forEach((m) => {
+      m.addEventListener("input", (b) => {
         const f = b.target, g = f.getAttribute("data-field-id");
         if (g) {
           this.updateState(g, f.value);
@@ -1729,14 +1811,14 @@ class Y {
           C && (C.textContent = `${f.value} ${f.getAttribute("data-unit") || ""}`.trim());
         }
       });
-    }), this.container.querySelectorAll(".nym-option-card").forEach((u) => {
-      u.addEventListener("click", () => {
-        const b = u.getAttribute("data-field-id"), f = u.getAttribute("data-option-id");
+    }), this.container.querySelectorAll(".nym-option-card").forEach((m) => {
+      m.addEventListener("click", () => {
+        const b = m.getAttribute("data-field-id"), f = m.getAttribute("data-option-id");
         b && f && this.updateState(b, f);
       });
-    }), this.container.querySelectorAll(".nym-checkbox-item").forEach((u) => {
-      u.addEventListener("click", () => {
-        const b = u.getAttribute("data-field-id"), f = u.getAttribute("data-checkbox-id");
+    }), this.container.querySelectorAll(".nym-checkbox-item").forEach((m) => {
+      m.addEventListener("click", () => {
+        const b = m.getAttribute("data-field-id"), f = m.getAttribute("data-checkbox-id");
         if (b && f) {
           const g = Array.isArray(this.formState[b]) ? [...this.formState[b]] : [], C = g.indexOf(f);
           C >= 0 ? g.splice(C, 1) : g.push(f), this.updateState(b, g);
@@ -1745,193 +1827,189 @@ class Y {
     });
     const a = this.container.querySelector("#nym-btn-next");
     a && a.addEventListener("click", () => this.nextStep());
-    const l = this.container.querySelector("#nym-btn-prev");
-    l && l.addEventListener("click", () => this.prevStep());
-    const c = this.container.querySelector("#nym-lead-form");
-    c && c.addEventListener("submit", (u) => {
-      u.preventDefault();
-      const b = new FormData(c), f = {};
+    const d = this.container.querySelector("#nym-btn-prev");
+    d && d.addEventListener("click", () => this.prevStep());
+    const u = this.container.querySelector("#nym-lead-form");
+    u && u.addEventListener("submit", (m) => {
+      m.preventDefault();
+      const b = new FormData(u), f = {};
       b.forEach((g, C) => {
         f[C] = g;
       }), this.submitLead(f);
     });
-    const m = this.container.querySelector("#nym-toggle-breakdown");
-    m && m.addEventListener("click", () => {
+    const c = this.container.querySelector("#nym-toggle-breakdown");
+    c && c.addEventListener("click", () => {
       this.showBreakdownModal = !0, this.render();
     });
     const o = this.container.querySelector("#nym-modal-close");
     o && o.addEventListener("click", () => {
       this.showBreakdownModal = !1, this.render();
     });
-    const d = this.container.querySelector("#nym-modal-backdrop");
-    d && d.addEventListener("click", (u) => {
-      u.target === d && (this.showBreakdownModal = !1, this.render());
+    const l = this.container.querySelector("#nym-modal-backdrop");
+    l && l.addEventListener("click", (m) => {
+      m.target === l && (this.showBreakdownModal = !1, this.render());
     });
     const x = this.container.querySelector("#nym-btn-print");
     x && x.addEventListener("click", () => this.printReceipt());
-    const v = this.container.querySelector("#nym-btn-restart");
-    v && v.addEventListener("click", () => this.reset());
+    const w = this.container.querySelector("#nym-btn-restart");
+    w && w.addEventListener("click", () => this.reset());
   }
 }
-function ye(t, e) {
+function ge(t, e) {
   const r = typeof t == "string" ? document.querySelector(t) : t;
   if (!r)
     throw new Error(`[NymrelQuote] Container element not found: ${t}`);
-  return new Y(r, e);
+  return new J(r, e);
 }
-const be = ({
+const ve = ({
   schema: t,
   initialState: e,
   theme: r,
   sourceLabel: i,
   webhookUrl: a,
-  useShadowDom: l = !0,
-  onCalculate: c,
-  onStepChange: m,
+  useShadowDom: d = !0,
+  onCalculate: u,
+  onStepChange: c,
   onSubmit: o,
-  onError: d,
+  onError: l,
   className: x,
-  style: v
+  style: w
 }) => {
-  const u = U(null), b = U(null);
-  return H(() => {
-    if (!u.current) return;
-    const f = r ? { ...t, theme: { ...t.theme, ...r } } : t, g = new Y(u.current, {
+  const m = H(null), b = H(null);
+  return U(() => {
+    if (!m.current) return;
+    const f = r ? { ...t, theme: { ...t.theme, ...r } } : t, g = new J(m.current, {
       schema: f,
       initialState: e,
       sourceLabel: i,
       webhookUrl: a,
-      useShadowDom: l,
+      useShadowDom: d,
       callbacks: {
-        onCalculate: c,
-        onStepChange: m,
+        onCalculate: u,
+        onStepChange: c,
         onSubmit: o,
-        onError: d
+        onError: l
       }
     });
     return b.current = g, () => {
-      b.current = null, u.current && (u.current.innerHTML = "");
+      b.current = null, m.current && (m.current.innerHTML = "");
     };
-  }, [t, r, i, a, l]), /* @__PURE__ */ J(
+  }, [t, r, i, a, d]), /* @__PURE__ */ ee(
     "div",
     {
-      ref: u,
+      ref: m,
       className: `nymrel-quote-widget-root ${x || ""}`.trim(),
-      style: v
+      style: w
     }
   );
 };
-function he(t, e) {
-  const [r, i] = L(() => {
+function xe(t, e) {
+  const [r, i] = A(() => {
     const y = {};
-    return t.steps.forEach(($) => {
-      $.fields.forEach((S) => {
+    return t.steps.forEach((F) => {
+      F.fields.forEach((S) => {
         S.defaultValue !== void 0 && (y[S.id] = S.defaultValue);
       });
     }), { ...y, ...e };
-  }), [a, l] = L(0), [c, m] = L(() => N(t, r)), [o, d] = L({}), [x, v] = L(!1), [u, b] = L(!1), [f, g] = L(null);
-  H(() => {
-    const y = N(t, r);
-    m(y);
+  }), [a, d] = A(0), [u, c] = A(() => Q(t, r)), [o, l] = A({}), [x, w] = A(!1), [m, b] = A(!1), [f, g] = A(null), [C, L] = A(null);
+  U(() => {
+    const y = Q(t, r);
+    c(y);
   }, [t, r]);
-  const C = P((y, $) => {
-    i((S) => ({ ...S, [y]: w($) })), d((S) => {
-      const k = { ...S };
-      return delete k[y], k;
+  const R = P((y, F) => {
+    i((S) => ({ ...S, [y]: k(F) })), l((S) => {
+      const v = { ...S };
+      return delete v[y], v;
     });
-  }, []), z = P(() => {
+  }, []), _ = P(() => {
     const y = t.steps[a];
     if (!y) return !1;
-    let $ = !1;
+    let F = !1;
     const S = {};
-    for (const k of y.fields) {
-      const A = O(k, r[k.id]);
-      A.valid || (S[k.id] = A.error || "Invalid value", $ = !0);
+    for (const v of y.fields) {
+      const s = O(v, r[v.id]);
+      s.valid || (S[v.id] = s.error || "Invalid value", F = !0);
     }
-    return $ ? (d(S), !1) : a < t.steps.length ? (l((k) => k + 1), !0) : !1;
-  }, [t, a, r]), M = P(() => {
-    a > 0 && l((y) => y - 1);
-  }, [a]), _ = P(async (y, $ = {}) => {
-    v(!0);
-    const S = V({ sourceLabel: $.sourceLabel }), k = {
-      quoteId: c.quoteId,
+    return F ? (l(S), !1) : a < t.steps.length ? (d((v) => v + 1), !0) : !1;
+  }, [t, a, r]), z = P(() => {
+    a > 0 && d((y) => y - 1);
+  }, [a]), N = P(async (y, F = {}) => {
+    w(!0);
+    const S = V({ sourceLabel: F.sourceLabel }), v = {
+      quoteId: u.quoteId,
       schemaId: t.id,
       schemaName: t.name,
-      quote: c,
+      quote: u,
       formState: r,
       lead: {
-        name: w(y.name),
-        email: w(y.email),
-        phone: w(y.phone || ""),
-        address: w(y.address || ""),
-        zipCode: w(y.zipCode || ""),
-        preferredDate: w(y.preferredDate || ""),
-        preferredTime: w(y.preferredTime || ""),
-        notes: w(y.notes || "")
+        name: k(y.name),
+        email: k(y.email),
+        phone: k(y.phone || ""),
+        address: k(y.address || ""),
+        zipCode: k(y.zipCode || ""),
+        preferredDate: k(y.preferredDate || ""),
+        preferredTime: k(y.preferredTime || ""),
+        notes: k(y.notes || "")
       },
       attribution: S,
       submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
       metadata: t.metadata
     };
-    if ($.webhookUrl)
-      try {
-        await fetch($.webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(k)
-        });
-      } catch (A) {
-        console.warn("[useQuoteEngine] Webhook error:", A);
-      }
-    return W(t.id, k.quoteId, c.target, k.lead.email), v(!1), b(!0), g(k), k;
-  }, [t, c, r]), B = P(() => {
+    if (F.webhookUrl) {
+      const s = await K(F.webhookUrl, v);
+      (s.status === "rejected" || s.status === "failed") && console.warn("[useQuoteEngine] Webhook delivery notice:", s.message), v.delivery = s;
+    } else
+      v.delivery = G();
+    return Y(t.id, v.quoteId, u.target, v.lead.email), w(!1), b(!0), g(v), L(v.delivery ?? null), v;
+  }, [t, u, r]), T = P(() => {
     const y = {};
-    t.steps.forEach(($) => {
-      $.fields.forEach((S) => {
+    t.steps.forEach((F) => {
+      F.fields.forEach((S) => {
         S.defaultValue !== void 0 && (y[S.id] = S.defaultValue);
       });
-    }), i({ ...y, ...e }), l(0), b(!1), v(!1), g(null), d({});
+    }), i({ ...y, ...e }), d(0), b(!1), w(!1), g(null), L(null), l({});
   }, [t, e]);
   return {
-    quote: c,
+    quote: u,
     formState: r,
     currentStepIndex: a,
     fieldErrors: o,
     isSubmitting: x,
-    isSubmitted: u,
+    isSubmitted: m,
     lastSubmission: f,
-    updateField: C,
-    nextStep: z,
-    prevStep: M,
-    submitLead: _,
-    reset: B
+    deliveryReceipt: C,
+    updateField: R,
+    nextStep: _,
+    prevStep: z,
+    submitLead: N,
+    reset: T
   };
 }
 export {
-  se as D,
-  ie as L,
-  Y as N,
-  be as Q,
-  ae as a,
-  R as b,
-  N as c,
+  de as D,
+  le as L,
+  J as N,
+  ve as Q,
+  oe as a,
+  q as b,
+  Q as c,
   j as d,
-  T as e,
+  B as e,
   V as f,
   I as g,
-  le as h,
-  Z as i,
-  X as j,
-  ee as k,
-  de as l,
-  W as m,
-  ne as n,
-  te as o,
-  re as p,
-  ye as q,
-  oe as r,
-  w as s,
-  pe as t,
-  he as u,
+  me as h,
+  te as i,
+  re as j,
+  ne as k,
+  ue as l,
+  Y as m,
+  se as n,
+  ae as o,
+  ie as p,
+  ge as q,
+  ce as r,
+  k as s,
+  fe as t,
+  xe as u,
   O as v
 };

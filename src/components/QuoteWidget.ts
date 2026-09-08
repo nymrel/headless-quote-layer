@@ -4,6 +4,7 @@
  */
 
 import {
+  LeadDeliveryReceipt,
   QuoteBreakdownItem,
   QuoteField,
   QuoteResult,
@@ -13,6 +14,12 @@ import {
   WidgetCallbacks
 } from '../core/types';
 import { calculateQuote, evaluateCondition, sanitizeInput, validateField } from '../core/engine';
+import {
+  createCallbackOnlyReceipt,
+  createNotConfiguredReceipt,
+  deliverSubmissionViaWebhook,
+  describeLeadDelivery
+} from '../core/lead-delivery';
 import { extractAttribution, trackLeadSubmitted, trackQuoteCalculated, trackQuoteViewed, trackStepCompleted } from '../core/attribution';
 import { getShadowStyles, resolveTheme } from './WarmTheme';
 
@@ -49,6 +56,7 @@ export class NymrelQuoteWidget {
   private isSubmitted = false;
   private isSubmitting = false;
   private lastSubmission: QuoteSubmission | null = null;
+  private lastDeliveryReceipt: LeadDeliveryReceipt | null = null;
   private sourceLabel?: string;
   private webhookUrl?: string;
   private fieldErrors: Record<string, string> = {};
@@ -206,13 +214,13 @@ export class NymrelQuoteWidget {
       this.fieldErrors['lead_name'] = 'Full Name is required.';
     }
 
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!leadData.email || !emailRegex.test(String(leadData.email))) {
       this.fieldErrors['lead_email'] = 'A valid email address is required.';
     }
 
     if (leadFormConfig?.requirePhone) {
-      const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$/;
+      const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
       if (!leadData.phone || !phoneRegex.test(String(leadData.phone))) {
         this.fieldErrors['lead_phone'] = 'Phone number is required.';
       }
@@ -254,38 +262,50 @@ export class NymrelQuoteWidget {
     };
 
     try {
-      // 1. Dispatch Webhook POST if configured
+      // 1. Dispatch Webhook POST if configured, recording a truthful receipt.
+      //    Only a resolved fetch with response.ok === true counts as acceptance.
       if (this.webhookUrl) {
-        try {
-          await fetch(this.webhookUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Nymrel-Quote-Id': submission.quoteId
-            },
-            body: JSON.stringify(submission)
-          });
-        } catch (webhookErr) {
-          console.warn('[NymrelQuote] Webhook delivery notice:', webhookErr);
+        const delivery = await deliverSubmissionViaWebhook(this.webhookUrl, submission);
+        if (delivery.status === 'rejected' || delivery.status === 'failed') {
+          console.warn('[NymrelQuote] Webhook delivery notice:', delivery.message);
         }
+        submission.delivery = delivery;
+      } else {
+        submission.delivery = this.callbacks.onSubmit
+          ? createCallbackOnlyReceipt()
+          : createNotConfiguredReceipt();
       }
 
       // 2. Call user callback
       if (this.callbacks.onSubmit) {
-        await this.callbacks.onSubmit(submission);
+        try {
+          await this.callbacks.onSubmit(submission);
+        } catch (error) {
+          submission.localHandlingFailed = true;
+          if (submission.delivery?.channel === 'callback') {
+            submission.delivery = {
+              ...submission.delivery,
+              status: 'failed',
+              ok: false,
+              message: 'The page handler failed. No external delivery was attempted by the widget. Your quote is shown below.'
+            };
+          }
+          try { this.callbacks.onError?.(error as Error); } catch { /* Keep the observed receipt. */ }
+        }
       }
 
       // 3. Track GA4/GTM event
-      trackLeadSubmitted(
+      try { trackLeadSubmitted(
         this.schema.id,
         submission.quoteId,
         this.currentQuote.target,
         submission.lead.email
-      );
+      ); } catch { /* Analytics cannot discard a captured submission. */ }
 
       this.isSubmitting = false;
       this.isSubmitted = true;
       this.lastSubmission = submission;
+      this.lastDeliveryReceipt = submission.delivery ?? null;
       this.render();
       return submission;
     } catch (err: any) {
@@ -297,6 +317,15 @@ export class NymrelQuoteWidget {
       this.render();
       return null;
     }
+  }
+
+  /**
+   * Truthful delivery receipt for the most recent submission.
+   * Null before any submission; cleared by reset().
+   * Only `status === 'accepted'` reflects a verified (2xx) webhook response.
+   */
+  public getLastDeliveryReceipt(): LeadDeliveryReceipt | null {
+    return this.lastDeliveryReceipt;
   }
 
   /**
@@ -315,6 +344,7 @@ export class NymrelQuoteWidget {
     this.isSubmitted = false;
     this.isSubmitting = false;
     this.lastSubmission = null;
+    this.lastDeliveryReceipt = null;
     this.fieldErrors = {};
     this.recalculate();
   }
@@ -708,14 +738,20 @@ export class NymrelQuoteWidget {
    */
   private renderSuccessScreen(submission: QuoteSubmission): string {
     const config = this.schema.leadForm;
+    const allowCustomCopy = submission.delivery?.status === 'accepted' && !submission.localHandlingFailed;
 
     return `
       <div class="nym-success-screen">
         <div class="nym-success-icon">✓</div>
-        <h3 class="nym-step-title">${escapeHtml(config?.successTitle || 'Estimate Successfully Saved & Confirmed!')}</h3>
-        <p class="nym-step-subtitle">${escapeHtml(config?.successMessage || 'A detailed quote confirmation and project summary have been dispatched to your email.')}</p>
+        <h3 class="nym-step-title">${escapeHtml((allowCustomCopy && config?.successTitle) || 'Estimate Captured Successfully!')}</h3>
+        <p class="nym-step-subtitle">${escapeHtml((allowCustomCopy && config?.successMessage) || 'Your quote summary is below. Print or save a copy for your records.')}</p>
+        ${submission.localHandlingFailed ? '<p role="alert">The page handler failed after capture. The delivery status below records the observed outcome.</p>' : ''}
 
         <div class="nym-receipt-card">
+          <div class="nym-delivery-status nym-receipt-row" role="status">
+            <span class="nym-receipt-key">Delivery Status:</span>
+            <span class="nym-receipt-val">${escapeHtml(describeLeadDelivery(this.lastDeliveryReceipt))}</span>
+          </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Quote Reference ID:</span>
             <span class="nym-receipt-val" style="font-family: monospace;">${escapeHtml(submission.quoteId)}</span>

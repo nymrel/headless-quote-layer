@@ -296,6 +296,27 @@ When a lead submits their details, the widget automatically posts a structured J
 
 ---
 
+### Delivery receipt semantics
+
+`submitLead` preserves the captured submission locally and records what this
+browser observed in `submission.delivery`:
+
+- `accepted` means the configured webhook returned an HTTP 2xx response.
+- `rejected` means the webhook responded with a non-2xx status.
+- `failed` means the webhook request or local page handler failed; `channel`
+  identifies which attempt failed.
+- `callback_only` means the submission was handed to the local page handler;
+  no external delivery was attempted by the widget.
+- `not_configured` means no webhook or local callback delivery target exists.
+
+An `accepted` receipt confirms only the HTTP response from the configured
+endpoint. It does not prove downstream CRM persistence, email delivery, or any
+other provider-side outcome. A rejected or failed receipt leaves the quote and
+lead details available in the local submission and renders the observed failure
+instead of claiming delivery. Local-only capture does not send the lead anywhere.
+If a page callback fails after webhook acceptance, the accepted receipt remains
+available and `localHandlingFailed` records the separate callback error.
+
 ## 🎨 Design Philosophy: Nymrel Warm Paper
 
 Built under the **Nymrel Design Contract**, prioritizing organic, human-friendly warmth over harsh neon dark-modes:

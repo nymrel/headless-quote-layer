@@ -3,7 +3,7 @@
  * Copyright 2026 Nymrel / JalenBuilds LLC
  */
 import React from 'react';
-import { QuoteResult, QuoteSchema, QuoteSubmission, StepConfig, ThemeConfig } from '../core/types';
+import { LeadDeliveryReceipt, QuoteResult, QuoteSchema, QuoteSubmission, StepConfig, ThemeConfig } from '../core/types';
 export interface QuoteWidgetProps {
     schema: QuoteSchema;
     initialState?: Record<string, any>;
@@ -33,6 +33,7 @@ export declare function useQuoteEngine(schema: QuoteSchema, initialState?: Recor
     isSubmitting: boolean;
     isSubmitted: boolean;
     lastSubmission: QuoteSubmission | null;
+    deliveryReceipt: LeadDeliveryReceipt | null;
     updateField: (fieldId: string, value: any) => void;
     nextStep: () => boolean;
     prevStep: () => void;

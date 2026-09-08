@@ -117,7 +117,42 @@ export interface LeadData {
     notes?: string;
     customFields?: Record<string, any>;
 }
+/**
+ * Channel that produced a lead delivery receipt.
+ * - 'none'     : no external target exists and no programmatic handler received the lead
+ * - 'webhook'  : an HTTP POST to the configured webhook was attempted
+ * - 'callback' : only local/programmatic handling occurred (onSubmit callback or hook caller)
+ */
+export type LeadDeliveryChannel = 'none' | 'webhook' | 'callback';
+/**
+ * Machine-readable outcome of a lead delivery attempt.
+ * - 'not_configured' : no delivery target configured; capture is local-only
+ * - 'callback_only'  : a local handler received the lead; no HTTP attempt was made
+ * - 'accepted'       : webhook fetch resolved with response.ok === true (HTTP acceptance only)
+ * - 'rejected'       : webhook fetch resolved but response.ok === false (non-2xx)
+ * - 'failed'         : webhook fetch threw (network/DNS/offline error); no response received
+ */
+export type LeadDeliveryStatus = 'not_configured' | 'callback_only' | 'accepted' | 'rejected' | 'failed';
+/**
+ * Serializable, truthful record of what actually happened to a submitted lead.
+ * Only `status: 'accepted'` — backed by an observed successful HTTP response — may be
+ * read as HTTP acceptance. No field implies email, CRM, or provider persistence.
+ */
+export interface LeadDeliveryReceipt {
+    status: LeadDeliveryStatus;
+    channel: LeadDeliveryChannel;
+    /** ISO-8601 timestamp of the delivery attempt (or of the decision not to attempt). */
+    attemptedAt: string;
+    /** HTTP status code, present only when a real response was received. */
+    httpStatus?: number;
+    /** Mirrors response.ok when an HTTP attempt occurred. */
+    ok?: boolean;
+    /** Human-readable, non-fabricating summary safe to render as-is. */
+    message: string;
+}
 export interface QuoteSubmission {
+    /** A page callback failed; any observed webhook receipt remains authoritative. */
+    localHandlingFailed?: boolean;
     quoteId: string;
     schemaId: string;
     schemaName: string;
@@ -127,6 +162,8 @@ export interface QuoteSubmission {
     attribution: AttributionData;
     submittedAt: string;
     metadata?: Record<string, any>;
+    /** Truthful delivery receipt for this submission (absent on legacy payloads). */
+    delivery?: LeadDeliveryReceipt;
 }
 export interface LeadFormConfig {
     enabled: boolean;

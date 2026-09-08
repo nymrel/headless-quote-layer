@@ -189,7 +189,7 @@ export const roofingPreset: QuoteSchema = {
     requireAddress: true,
     requireDate: true,
     submitButtonText: 'Confirm Quote & Book Inspection',
-    successTitle: 'Quote Confirmed & Roofing Inspector Assigned!',
-    successMessage: 'Your estimated quote has been saved. Our master roofer will confirm your consultation window shortly.'
+    successTitle: 'Roofing Estimate Captured',
+    successMessage: 'Review your estimate and delivery status below. Print or save a copy for your records.'
   }
 };
