@@ -14,6 +14,7 @@ import {
   isDeliveryAccepted
 } from '../src/core/lead-delivery';
 import { createQuoteWidget, QuoteWidgetOptions } from '../src/components/QuoteWidget';
+import { roofingPreset } from '../src/presets/roofing';
 import {
   LeadDeliveryReceipt,
   QuoteSchema,
@@ -313,6 +314,15 @@ describe('NymrelQuoteWidget.submitLead delivery receipts', () => {
     expect(submission?.delivery?.status).toBe('failed');
     expect(widget.getLastDeliveryReceipt()?.status).toBe('failed');
     expect(host.innerHTML).toContain('could not reach the destination');
+  });
+
+  it('does not invent inspector assignment for the built-in roofing preset', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+    const { widget, host } = mountWidget({ schema: roofingPreset, webhookUrl: 'https://example.invalid/hook' });
+    const submission = await widget.submitLead({ ...VALID_LEAD, phone: '5551234567', address: '123 Main St' });
+    expect(submission?.delivery?.status).toBe('failed');
+    expect(host.textContent).not.toMatch(/inspector assigned|will confirm|has been saved/i);
+    expect(host.textContent).toContain('could not reach the destination');
   });
 
   it('preserves accepted delivery when a page callback throws', async () => {

@@ -149,7 +149,7 @@ export type LeadDeliveryChannel = 'none' | 'webhook' | 'callback';
  * - 'callback_only'  : a local handler received the lead; no HTTP attempt was made
  * - 'accepted'       : webhook fetch resolved with response.ok === true (HTTP acceptance only)
  * - 'rejected'       : webhook fetch resolved but response.ok === false (non-2xx)
- * - 'failed'         : webhook fetch threw (network/DNS/offline error); no response received
+ * - 'failed'         : webhook fetch or local page handler threw; channel identifies the attempt
  */
 export type LeadDeliveryStatus =
   | 'not_configured'

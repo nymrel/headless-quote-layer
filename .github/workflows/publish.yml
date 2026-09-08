@@ -1,90 +1,165 @@
-name: Release & Publish (npm)
+# yamllint disable rule:line-length
+# yamllint disable rule:truthy
+name: Publish verified npm package
 
 on:
   push:
-    branches: [main, master]
     tags:
       - 'v*'
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  test-node:
-    name: Test Node.js (${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-        continue-on-error: true
-
-      - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Build bundle
-        run: npm run build
-
-      - name: Run Node.js test suite
-        run: npm test
-
-  security-audit:
-    name: Security & DevSecOps Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: NPM Security Audit
-        run: |
-          npm audit --audit-level=high || echo "::warning ::NPM audit reported potential high-severity advisories"
-
-  publish-npm:
-    name: Publish to npm (OIDC Provenance)
-    needs: [test-node, security-audit]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+  verify:
+    name: Verify tagged main-branch candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
-
+    outputs:
+      commit_sha: ${{ steps.release.outputs.commit_sha }}
+    env:
+      NPM_CONFIG_AUDIT: 'false'
+      NPM_CONFIG_FUND: 'false'
+      NPM_CONFIG_IGNORE_SCRIPTS: 'true'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20.x
-        uses: actions/setup-node@v4
+      - name: Check out the exact tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          node-version: 20.x
-          registry-url: 'https://registry.npmjs.org'
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Prepublish validation (build & test)
-        run: npm run prepublishOnly
-
-      - name: Publish package to npm with OIDC provenance
-        run: npm publish --access public --provenance
+      - name: Verify tag, version, and main ancestry
+        id: release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          test "${RELEASE_TAG}" = "v${version}"
+          tag_commit="$(git rev-list -n 1 "${RELEASE_TAG}")"
+          test "$(git rev-parse HEAD)" = "${tag_commit}"
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor "${tag_commit}" refs/remotes/origin/main
+          echo "commit_sha=${tag_commit}" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
+
+      - name: Install exact npm outside the project contract
+        # zizmor: ignore[adhoc-packages]
+        working-directory: ${{ runner.temp }}
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Run source, package, and dependency gates
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check
+          npm run audit:ci
+          npm run audit:prod
+
+  build:
+    name: Build immutable npm archive
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      NPM_CONFIG_AUDIT: 'false'
+      NPM_CONFIG_FUND: 'false'
+      NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+    steps:
+      - name: Check out the verified commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ needs.verify.outputs.commit_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
+
+      - name: Install exact npm outside the project contract
+        # zizmor: ignore[adhoc-packages]
+        working-directory: ${{ runner.temp }}
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Build archive and checksum
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check:package
+          mkdir -p release
+          npm pack --ignore-scripts --pack-destination release
+          sha256sum release/*.tgz > release/SHA256SUMS
+
+      - name: Upload immutable package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: npm-package-${{ needs.verify.outputs.commit_sha }}
+          path: release
+          if-no-files-found: error
+          retention-days: 14
+
+  attest:
+    name: Attest package build
+    needs: [verify, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      attestations: write  # Create the GitHub artifact attestation for the exact npm archive.
+      contents: read
+      id-token: write  # Exchange the workflow identity for the attestation signing token.
+    steps:
+      - name: Download immutable package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: npm-package-${{ needs.verify.outputs.commit_sha }}
+          path: release
+
+      - name: Generate build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
+        with:
+          subject-path: release/**/*
+
+  publish:
+    name: Publish through npm trusted publishing
+    needs: [verify, build, attest]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@nymrel/headless-quote
+    permissions:
+      contents: read
+      id-token: write  # Exchange the npm environment identity for a short-lived publish token.
+    steps:
+      - name: Download immutable package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: npm-package-${{ needs.verify.outputs.commit_sha }}
+          path: release
+
+      - name: Set up Node.js for trusted publishing
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
+
+      - name: Install trusted-publishing npm client
+        # zizmor: ignore[adhoc-packages]
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Publish the exact archive with provenance
+        run: |
+          mapfile -t packages < <(find release -maxdepth 1 -type f -name '*.tgz' -print)
+          test "${#packages[@]}" -eq 1
+          npm publish "${packages[0]}" --access public --provenance --ignore-scripts
