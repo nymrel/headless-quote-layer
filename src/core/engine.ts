@@ -12,6 +12,78 @@ import {
   PricingRule
 } from './types';
 
+function finiteNumber(value: unknown, setting: string): number {
+  if (value === null || value === undefined || value === '' || typeof value === 'boolean') {
+    throw new RangeError(`${setting} must be a finite number.`);
+  }
+  let numeric: number;
+  try {
+    numeric = Number(value);
+  } catch {
+    throw new RangeError(`${setting} must be a finite number.`);
+  }
+  if (!Number.isFinite(numeric)) {
+    throw new RangeError(`${setting} must be a finite number.`);
+  }
+  return numeric;
+}
+
+function nonNegativeNumber(value: unknown, setting: string): number {
+  const numeric = finiteNumber(value, setting);
+  if (numeric < 0) {
+    throw new RangeError(`${setting} must be greater than or equal to zero.`);
+  }
+  return numeric;
+}
+
+function positiveNumber(value: unknown, setting: string): number {
+  const numeric = finiteNumber(value, setting);
+  if (numeric <= 0) {
+    throw new RangeError(`${setting} must be greater than zero.`);
+  }
+  return numeric;
+}
+
+function assertOrderedRange(min: number, target: number, max: number, setting: string): void {
+  nonNegativeNumber(min, `${setting}.min`);
+  nonNegativeNumber(target, `${setting}.target`);
+  nonNegativeNumber(max, `${setting}.max`);
+  if (min > target || target > max) {
+    throw new RangeError(`${setting} must satisfy 0 <= min <= target <= max.`);
+  }
+}
+
+function assertFiniteBreakdown(breakdown: QuoteBreakdownItem[], setting: string): void {
+  for (const item of breakdown) {
+    finiteNumber(item.amount, `${setting} breakdown item "${item.id}" amount`);
+  }
+}
+
+function assertValidFieldPricing(fields: QuoteField[]): void {
+  for (const field of fields) {
+    const prefix = `Field "${field.id}"`;
+    if (field.min !== undefined) finiteNumber(field.min, `${prefix} min`);
+    if (field.max !== undefined) finiteNumber(field.max, `${prefix} max`);
+    if (field.step !== undefined) positiveNumber(field.step, `${prefix} step`);
+    if (field.min !== undefined && field.max !== undefined && field.min > field.max) {
+      throw new RangeError(`${prefix} must satisfy min <= max.`);
+    }
+    if (field.unitPrice !== undefined) {
+      nonNegativeNumber(field.unitPrice, `${prefix} unitPrice`);
+    }
+    if (field.multiplier !== undefined) {
+      positiveNumber(field.multiplier, `${prefix} multiplier`);
+    }
+    for (const option of field.options || []) {
+      const optionPrefix = `Option "${field.id}.${option.id}"`;
+      if (option.adder !== undefined) finiteNumber(option.adder, `${optionPrefix} adder`);
+      if (option.multiplier !== undefined) {
+        positiveNumber(option.multiplier, `${optionPrefix} multiplier`);
+      }
+    }
+  }
+}
+
 /**
  * Generate a unique quote reference ID
  */
@@ -34,13 +106,11 @@ export function formatCurrency(
   symbol = '$',
   decimals = 0
 ): string {
-  if (isNaN(amount) || amount === null || amount === undefined) {
-    return `${symbol}0`;
-  }
+  const numericAmount = finiteNumber(amount, 'Currency amount');
   
   const rounded = decimals > 0 
-    ? amount.toFixed(decimals) 
-    : Math.round(amount).toString();
+    ? numericAmount.toFixed(decimals)
+    : Math.round(numericAmount).toString();
     
   const parts = rounded.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -78,7 +148,7 @@ export function sanitizeInput(val: any): any {
     return output.trim();
   }
   if (typeof val === 'number') {
-    return isNaN(val) ? 0 : val;
+    return finiteNumber(val, 'Numeric input');
   }
   if (Array.isArray(val)) {
     return val.map(sanitizeInput);
@@ -149,9 +219,14 @@ export function validateField(
 
   if (value !== undefined && value !== null && value !== '') {
     if (field.type === 'number' || field.type === 'slider' || field.type === 'stepper') {
-      const num = Number(value);
-      if (isNaN(num)) {
-        return { valid: false, error: `${field.label} must be a valid number.` };
+      let num: number;
+      try {
+        num = Number(value);
+      } catch {
+        return { valid: false, error: `${field.label} must be a valid finite number.` };
+      }
+      if (!Number.isFinite(num)) {
+        return { valid: false, error: `${field.label} must be a valid finite number.` };
       }
       if (field.min !== undefined && num < field.min) {
         return { valid: false, error: `Minimum value is ${field.min} ${field.unit || ''}`.trim() };
@@ -183,6 +258,7 @@ export function validateField(
  * Apply rounding policy to an amount
  */
 export function applyRounding(amount: number, rounding?: PricingRule['rounding']): number {
+  finiteNumber(amount, 'Rounding amount');
   if (!rounding || rounding === 'none') return amount;
   
   switch (rounding) {
@@ -222,13 +298,18 @@ export function calculateQuote(
       allFields.push(field);
     });
   });
+  assertValidFieldPricing(allFields);
 
   // Check if custom formula is provided
   if (pricing.formula === 'custom' && typeof pricing.customFormula === 'function') {
     const customRes = pricing.customFormula(formState, allFields);
+    assertOrderedRange(customRes.min, customRes.target, customRes.max, 'Custom quote result');
+    const breakdown = customRes.breakdown || [];
+    assertFiniteBreakdown(breakdown, 'Custom quote result');
     const target = applyRounding(customRes.target, pricing.rounding);
     const min = applyRounding(customRes.min, pricing.rounding);
     const max = applyRounding(customRes.max, pricing.rounding);
+    assertOrderedRange(min, target, max, 'Custom quote result');
     
     return {
       min,
@@ -239,7 +320,7 @@ export function calculateQuote(
       formattedTarget: formatCurrency(target, currency, symbol),
       currency,
       currencySymbol: symbol,
-      breakdown: customRes.breakdown || [],
+      breakdown,
       recommendations: [],
       calculatedAt: new Date().toISOString(),
       quoteId
@@ -247,7 +328,24 @@ export function calculateQuote(
   }
 
   // Standard / Multiplicative / Tiered Calculation Engine
-  let baseSum = Number(pricing.baseFee || pricing.baseCalloutFee || 0);
+  const baseSetting = pricing.baseFee !== undefined ? 'pricing.baseFee' : 'pricing.baseCalloutFee';
+  const baseSum = nonNegativeNumber(
+    pricing.baseFee ?? pricing.baseCalloutFee ?? 0,
+    baseSetting
+  );
+  const taxRate = nonNegativeNumber(pricing.taxRate ?? 0, 'pricing.taxRate');
+  const spreadPercent = nonNegativeNumber(
+    pricing.marginPercent ?? 10,
+    'pricing.marginPercent'
+  ) / 100;
+  const minSpread = nonNegativeNumber(
+    pricing.minRangeSpreadPercent ?? spreadPercent * 100,
+    'pricing.minRangeSpreadPercent'
+  ) / 100;
+  const maxSpread = nonNegativeNumber(
+    pricing.maxRangeSpreadPercent ?? spreadPercent * 100,
+    'pricing.maxRangeSpreadPercent'
+  ) / 100;
   let materialSum = 0;
   let laborSum = 0;
   let addonSum = 0;
@@ -278,26 +376,39 @@ export function calculateQuote(
 
     // 1. Numeric / Dimension fields (e.g. sq ft, linear ft, quantity)
     if (field.type === 'number' || field.type === 'slider' || field.type === 'stepper') {
-      const numVal = Number(val);
-      if (!isNaN(numVal) && numVal > 0) {
-        if (field.unitPrice && field.unitPrice > 0) {
-          const itemCost = numVal * field.unitPrice;
+      const numVal = nonNegativeNumber(val, `Field "${field.id}" value`);
+      const validation = validateField(field, numVal);
+      if (!validation.valid) {
+        throw new RangeError(`Field "${field.id}" is invalid: ${validation.error}`);
+      }
+      const unitPrice = field.unitPrice === undefined
+        ? undefined
+        : nonNegativeNumber(field.unitPrice, `Field "${field.id}" unitPrice`);
+      const fieldMultiplier = field.multiplier === undefined
+        ? undefined
+        : positiveNumber(field.multiplier, `Field "${field.id}" multiplier`);
+      if (numVal > 0) {
+        if (unitPrice !== undefined && unitPrice > 0) {
+          const itemCost = finiteNumber(numVal * unitPrice, `Field "${field.id}" item cost`);
           if (field.category === 'material') {
-            materialSum += itemCost;
+            materialSum = finiteNumber(materialSum + itemCost, 'Material subtotal');
           } else {
-            laborSum += itemCost;
+            laborSum = finiteNumber(laborSum + itemCost, 'Labor subtotal');
           }
           breakdown.push({
             id: field.id,
-            label: `${field.label} (${numVal} ${field.unit || 'units'} @ ${formatCurrency(field.unitPrice, currency, symbol)}/${field.unit || 'unit'})`,
+            label: `${field.label} (${numVal} ${field.unit || 'units'} @ ${formatCurrency(unitPrice, currency, symbol)}/${field.unit || 'unit'})`,
             amount: itemCost,
             formattedAmount: formatCurrency(itemCost, currency, symbol),
             type: field.category === 'material' ? 'material' : 'labor'
           });
         }
         
-        if (field.multiplier && field.multiplier !== 1) {
-          compositeMultiplier *= field.multiplier;
+        if (fieldMultiplier !== undefined && fieldMultiplier !== 1) {
+          compositeMultiplier = positiveNumber(
+            compositeMultiplier * fieldMultiplier,
+            'Composite multiplier'
+          );
         }
       }
     }
@@ -307,9 +418,11 @@ export function calculateQuote(
       if (field.options && field.options.length > 0) {
         const selected = field.options.find(opt => String(opt.id) === String(val) || String(opt.value) === String(val));
         if (selected) {
-          if (selected.adder && Number(selected.adder) !== 0) {
-            const adder = Number(selected.adder);
-            addonSum += adder;
+          const adder = selected.adder === undefined
+            ? undefined
+            : finiteNumber(selected.adder, `Option "${field.id}.${selected.id}" adder`);
+          if (adder !== undefined && adder !== 0) {
+            addonSum = finiteNumber(addonSum + adder, 'Add-on subtotal');
             breakdown.push({
               id: `${field.id}-${selected.id}`,
               label: `${field.label}: ${selected.label}`,
@@ -320,9 +433,14 @@ export function calculateQuote(
             });
           }
 
-          if (selected.multiplier && Number(selected.multiplier) !== 1) {
-            const mult = Number(selected.multiplier);
-            compositeMultiplier *= mult;
+          const mult = selected.multiplier === undefined
+            ? undefined
+            : positiveNumber(selected.multiplier, `Option "${field.id}.${selected.id}" multiplier`);
+          if (mult !== undefined && mult !== 1) {
+            compositeMultiplier = positiveNumber(
+              compositeMultiplier * mult,
+              'Composite multiplier'
+            );
             breakdown.push({
               id: `${field.id}-${selected.id}-mult`,
               label: `${selected.label} Factor (${mult}x)`,
@@ -342,9 +460,11 @@ export function calculateQuote(
         for (const itemVal of val) {
           const selected = field.options.find(opt => String(opt.id) === String(itemVal) || String(opt.value) === String(itemVal));
           if (selected) {
-            if (selected.adder && Number(selected.adder) !== 0) {
-              const adder = Number(selected.adder);
-              addonSum += adder;
+            const adder = selected.adder === undefined
+              ? undefined
+              : finiteNumber(selected.adder, `Option "${field.id}.${selected.id}" adder`);
+            if (adder !== undefined && adder !== 0) {
+              addonSum = finiteNumber(addonSum + adder, 'Add-on subtotal');
               breakdown.push({
                 id: `${field.id}-${selected.id}`,
                 label: selected.label,
@@ -354,61 +474,71 @@ export function calculateQuote(
                 description: selected.description
               });
             }
-            if (selected.multiplier && Number(selected.multiplier) !== 1) {
-              compositeMultiplier *= Number(selected.multiplier);
+            const mult = selected.multiplier === undefined
+              ? undefined
+              : positiveNumber(selected.multiplier, `Option "${field.id}.${selected.id}" multiplier`);
+            if (mult !== undefined && mult !== 1) {
+              compositeMultiplier = positiveNumber(
+                compositeMultiplier * mult,
+                'Composite multiplier'
+              );
             }
           }
         }
       } else if (typeof val === 'boolean' && val === true) {
-        if (field.unitPrice) {
-          addonSum += field.unitPrice;
+        const unitPrice = field.unitPrice === undefined
+          ? undefined
+          : nonNegativeNumber(field.unitPrice, `Field "${field.id}" unitPrice`);
+        if (unitPrice !== undefined && unitPrice !== 0) {
+          addonSum = finiteNumber(addonSum + unitPrice, 'Add-on subtotal');
           breakdown.push({
             id: field.id,
             label: field.label,
-            amount: field.unitPrice,
-            formattedAmount: formatCurrency(field.unitPrice, currency, symbol),
+            amount: unitPrice,
+            formattedAmount: formatCurrency(unitPrice, currency, symbol),
             type: 'addon'
           });
         }
-        if (field.multiplier && field.multiplier !== 1) {
-          compositeMultiplier *= field.multiplier;
+        const fieldMultiplier = field.multiplier === undefined
+          ? undefined
+          : positiveNumber(field.multiplier, `Field "${field.id}" multiplier`);
+        if (fieldMultiplier !== undefined && fieldMultiplier !== 1) {
+          compositeMultiplier = positiveNumber(
+            compositeMultiplier * fieldMultiplier,
+            'Composite multiplier'
+          );
         }
       }
     }
   }
 
   // Compute Subtotal and apply Multipliers
-  const subtotalBeforeMultiplier = baseSum + materialSum + laborSum + addonSum;
-  let multipliedTarget = subtotalBeforeMultiplier * compositeMultiplier;
+  const subtotalBeforeMultiplier = finiteNumber(
+    baseSum + materialSum + laborSum + addonSum,
+    'Quote subtotal'
+  );
+  let multipliedTarget = finiteNumber(
+    subtotalBeforeMultiplier * compositeMultiplier,
+    'Multiplied quote target'
+  );
 
   // Apply Tax if applicable
-  if (pricing.taxRate && pricing.taxRate > 0) {
-    const taxAmount = multipliedTarget * pricing.taxRate;
+  if (taxRate > 0) {
+    const taxAmount = finiteNumber(multipliedTarget * taxRate, 'Tax amount');
     breakdown.push({
       id: 'tax',
-      label: `Estimated Tax (${(pricing.taxRate * 100).toFixed(1)}%)`,
+      label: `Estimated Tax (${(taxRate * 100).toFixed(1)}%)`,
       amount: taxAmount,
       formattedAmount: formatCurrency(taxAmount, currency, symbol),
       type: 'tax'
     });
-    multipliedTarget += taxAmount;
+    multipliedTarget = finiteNumber(multipliedTarget + taxAmount, 'Taxed quote target');
   }
 
   // Calculate dynamic Range Bounds
-  const spreadPercent = pricing.marginPercent 
-    ? pricing.marginPercent / 100 
-    : 0.10; // Default 10% spread
-    
-  const minSpread = pricing.minRangeSpreadPercent 
-    ? pricing.minRangeSpreadPercent / 100 
-    : spreadPercent;
-  const maxSpread = pricing.maxRangeSpreadPercent 
-    ? pricing.maxRangeSpreadPercent / 100 
-    : spreadPercent;
-
   let rawTarget = Math.max(0, multipliedTarget);
-  let rawMin = Math.max(0, rawTarget * (1 - minSpread));
-  let rawMax = Math.max(rawMin, rawTarget * (1 + maxSpread));
+  let rawMin = Math.max(0, finiteNumber(rawTarget * (1 - minSpread), 'Minimum quote bound'));
+  let rawMax = Math.max(rawTarget, finiteNumber(rawTarget * (1 + maxSpread), 'Maximum quote bound'));
 
   // If subtotal is zero, keep range zero
   if (subtotalBeforeMultiplier === 0 && baseSum === 0) {
@@ -421,6 +551,8 @@ export function calculateQuote(
   const target = applyRounding(rawTarget, pricing.rounding);
   const min = applyRounding(rawMin, pricing.rounding);
   const max = applyRounding(rawMax, pricing.rounding);
+  assertOrderedRange(min, target, max, 'Quote result');
+  assertFiniteBreakdown(breakdown, 'Quote result');
 
   // Derive dynamic smart recommendations based on form state
   if (formState.pitch === 'steep' || formState.difficulty === 'extreme' || formState.urgency === 'emergency') {

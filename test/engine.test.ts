@@ -28,9 +28,11 @@ describe('Engine: Quote ID & Currency Formatting', () => {
     expect(formatCurrency(49.99, 'EUR', '€', 2)).toBe('€49.99');
   });
 
-  it('handles invalid numbers safely in formatCurrency', () => {
-    expect(formatCurrency(NaN)).toBe('$0');
-    expect(formatCurrency(null as any)).toBe('$0');
+  it('fails closed for non-finite currency amounts', () => {
+    expect(() => formatCurrency(NaN)).toThrow(/finite number/);
+    expect(() => formatCurrency(Infinity)).toThrow(/finite number/);
+    expect(() => formatCurrency(-Infinity)).toThrow(/finite number/);
+    expect(() => formatCurrency(null as any)).toThrow(/finite number/);
   });
 });
 
@@ -78,6 +80,8 @@ describe('Engine: Input Sanitization & Validation', () => {
     expect(validateField(numField, 5).valid).toBe(false);
     expect(validateField(numField, 150).valid).toBe(false);
     expect(validateField(numField, 50).valid).toBe(true);
+    expect(validateField(numField, Infinity).valid).toBe(false);
+    expect(validateField(numField, -Infinity).valid).toBe(false);
   });
 
   it('validates email addresses', () => {
@@ -102,6 +106,12 @@ describe('Engine: Input Sanitization & Validation', () => {
     expect(validateField(phoneField, '123').valid).toBe(false);
     expect(validateField(phoneField, '(555) 123-4567').valid).toBe(true);
     expect(validateField(phoneField, '+1-555-123-4567').valid).toBe(true);
+  });
+
+  it('fails closed when sanitizing non-finite numeric input', () => {
+    expect(() => sanitizeInput(NaN)).toThrow(/finite number/);
+    expect(() => sanitizeInput(Infinity)).toThrow(/finite number/);
+    expect(sanitizeInput(0)).toBe(0);
   });
 });
 
@@ -230,5 +240,187 @@ describe('Engine: Quote Calculation & Dynamic Range', () => {
     expect(res.target).toBe(10000);
     expect(res.min).toBe(9000);
     expect(res.max).toBe(11000);
+  });
+
+  it('preserves explicit zero spreads and defaults omitted spreads to ten percent', () => {
+    const exactSchema: QuoteSchema = {
+      id: 'exact',
+      name: 'Exact',
+      pricing: {
+        baseFee: 100,
+        marginPercent: 0,
+        minRangeSpreadPercent: 0,
+        maxRangeSpreadPercent: 0
+      },
+      steps: []
+    };
+    const exact = calculateQuote(exactSchema, {});
+    expect([exact.min, exact.target, exact.max]).toEqual([100, 100, 100]);
+
+    const defaultSpread = calculateQuote({
+      ...exactSchema,
+      id: 'default-spread',
+      pricing: { baseFee: 100 }
+    }, {});
+    expect(defaultSpread.min).toBeCloseTo(90);
+    expect(defaultSpread.target).toBe(100);
+    expect(defaultSpread.max).toBeCloseTo(110);
+  });
+
+  it.each([
+    ['marginPercent', { marginPercent: -1 }],
+    ['minRangeSpreadPercent', { minRangeSpreadPercent: -1 }],
+    ['maxRangeSpreadPercent', { maxRangeSpreadPercent: -1 }],
+    ['taxRate', { taxRate: -0.1 }]
+  ])('rejects negative pricing.%s', (_setting, pricing) => {
+    expect(() => calculateQuote({
+      id: 'negative-setting',
+      name: 'Negative setting',
+      pricing: { baseFee: 100, ...pricing },
+      steps: []
+    }, {})).toThrow(/greater than or equal to zero/);
+  });
+
+  it.each([NaN, Infinity, -Infinity])('rejects a non-finite base fee (%s)', (baseFee) => {
+    expect(() => calculateQuote({
+      id: 'non-finite-base',
+      name: 'Non-finite base',
+      pricing: { baseFee },
+      steps: []
+    }, {})).toThrow(/pricing\.baseFee must be a finite number/);
+  });
+
+  it('rejects non-finite field values, unit prices, adders, and arithmetic overflow', () => {
+    const numericSchema: QuoteSchema = {
+      id: 'numeric-boundary',
+      name: 'Numeric boundary',
+      pricing: {},
+      steps: [{
+        id: 'values',
+        title: 'Values',
+        fields: [{ id: 'quantity', label: 'Quantity', type: 'number', unitPrice: 2 }]
+      }]
+    };
+    expect(() => calculateQuote(numericSchema, { quantity: Infinity })).toThrow(/Field "quantity" value/);
+
+    numericSchema.steps[0].fields[0].unitPrice = Infinity;
+    expect(() => calculateQuote(numericSchema, { quantity: 1 })).toThrow(/unitPrice/);
+
+    numericSchema.steps[0].fields[0].unitPrice = 2;
+    expect(() => calculateQuote(numericSchema, { quantity: Number.MAX_VALUE })).toThrow(/item cost/);
+
+    const optionSchema: QuoteSchema = {
+      id: 'option-boundary',
+      name: 'Option boundary',
+      pricing: {},
+      steps: [{
+        id: 'options',
+        title: 'Options',
+        fields: [{
+          id: 'tier',
+          label: 'Tier',
+          type: 'select',
+          options: [{ id: 'bad', label: 'Bad', value: 'bad', adder: Infinity }]
+        }]
+      }]
+    };
+    expect(() => calculateQuote(optionSchema, { tier: 'bad' })).toThrow(/adder/);
+  });
+
+  it.each([0, -1, Infinity])('rejects invalid selected multipliers (%s)', (multiplier) => {
+    const schema: QuoteSchema = {
+      id: 'multiplier-boundary',
+      name: 'Multiplier boundary',
+      pricing: { baseFee: 100 },
+      steps: [{
+        id: 'options',
+        title: 'Options',
+        fields: [{
+          id: 'tier',
+          label: 'Tier',
+          type: 'select',
+          options: [{ id: 'bad', label: 'Bad', value: 'bad', multiplier }]
+        }]
+      }]
+    };
+    expect(() => calculateQuote(schema, { tier: 'bad' })).toThrow(/multiplier/);
+  });
+
+  it('rejects invalid pricing configuration even when its field is inactive', () => {
+    const schema: QuoteSchema = {
+      id: 'inactive-invalid-field',
+      name: 'Inactive invalid field',
+      pricing: {},
+      steps: [{
+        id: 'fields',
+        title: 'Fields',
+        fields: [{
+          id: 'quantity',
+          label: 'Quantity',
+          type: 'number',
+          unitPrice: Infinity
+        }]
+      }]
+    };
+    expect(() => calculateQuote(schema, {})).toThrow(/Field "quantity" unitPrice/);
+  });
+
+  it('allows finite negative adders as explicit discounts without returning a negative quote', () => {
+    const result = calculateQuote({
+      id: 'discount',
+      name: 'Discount',
+      pricing: { baseFee: 100, marginPercent: 0 },
+      steps: [{
+        id: 'discounts',
+        title: 'Discounts',
+        fields: [{
+          id: 'discount',
+          label: 'Discount',
+          type: 'select',
+          options: [{ id: 'credit', label: 'Credit', value: 'credit', adder: -150 }]
+        }]
+      }]
+    }, { discount: 'credit' });
+    expect([result.min, result.target, result.max]).toEqual([0, 0, 0]);
+  });
+
+  it.each([
+    { min: 0, target: Infinity, max: Infinity },
+    { min: -1, target: 0, max: 1 },
+    { min: 10, target: 5, max: 20 },
+    { min: 0, target: 5, max: 4 }
+  ])('rejects invalid custom formula ranges (%o)', (customResult) => {
+    expect(() => calculateQuote({
+      id: 'custom-invalid',
+      name: 'Custom invalid',
+      pricing: {
+        formula: 'custom',
+        customFormula: () => customResult
+      },
+      steps: []
+    }, {})).toThrow(/Custom quote result/);
+  });
+
+  it('rejects non-finite custom breakdown amounts', () => {
+    expect(() => calculateQuote({
+      id: 'custom-breakdown-invalid',
+      name: 'Custom breakdown invalid',
+      pricing: {
+        formula: 'custom',
+        customFormula: () => ({
+          min: 1,
+          target: 1,
+          max: 1,
+          breakdown: [{
+            id: 'bad',
+            label: 'Bad',
+            amount: Infinity,
+            formattedAmount: '$Infinity',
+            type: 'base'
+          }]
+        })
+      },
+      steps: []
+    }, {})).toThrow(/breakdown item "bad" amount/);
   });
 });

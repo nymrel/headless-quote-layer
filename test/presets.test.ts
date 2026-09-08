@@ -19,6 +19,19 @@ describe('Presets Registry', () => {
     expect(getPreset('software')).toBe(softwarePreset);
     expect(getPreset('nonexistent')).toBeUndefined();
   });
+
+  it('returns finite ordered ranges for every preset default state', () => {
+    for (const preset of Object.values(PRESET_REGISTRY)) {
+      const result = calculateQuote(preset, {});
+      expect(Number.isFinite(result.min), preset.id).toBe(true);
+      expect(Number.isFinite(result.target), preset.id).toBe(true);
+      expect(Number.isFinite(result.max), preset.id).toBe(true);
+      expect(result.min, preset.id).toBeGreaterThanOrEqual(0);
+      expect(result.target, preset.id).toBeGreaterThanOrEqual(result.min);
+      expect(result.max, preset.id).toBeGreaterThanOrEqual(result.target);
+      expect(result.breakdown.every(item => Number.isFinite(item.amount)), preset.id).toBe(true);
+    }
+  });
 });
 
 describe('Preset: Roofing & Siding Calculator', () => {
