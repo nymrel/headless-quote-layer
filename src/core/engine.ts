@@ -127,6 +127,15 @@ export function evaluateCondition(
 /**
  * Validate a field value according to field constraints
  */
+export function isValidEmail(value: unknown): boolean {
+  const email = String(value || '');
+  if (!email || email.length > 254 || /\s/u.test(email)) return false;
+  const at = email.indexOf('@');
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf('.');
+  return at > 0 && at === email.lastIndexOf('@') && dot > 0 && dot < domain.length - 1;
+}
+
 export function validateField(
   field: QuoteField,
   value: any
@@ -152,8 +161,7 @@ export function validateField(
     }
 
     if (field.type === 'email') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(String(value))) {
+      if (!isValidEmail(value)) {
         return { valid: false, error: 'Please enter a valid email address.' };
       }
     }

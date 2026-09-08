@@ -13,7 +13,7 @@ import {
   StepConfig,
   WidgetCallbacks
 } from '../core/types';
-import { calculateQuote, evaluateCondition, sanitizeInput, validateField } from '../core/engine';
+import { calculateQuote, evaluateCondition, isValidEmail, sanitizeInput, validateField } from '../core/engine';
 import {
   createCallbackOnlyReceipt,
   createNotConfiguredReceipt,
@@ -214,12 +214,7 @@ export class NymrelQuoteWidget {
       this.fieldErrors['lead_name'] = 'Full Name is required.';
     }
 
-    const email = String(leadData.email || '');
-    const at = email.indexOf('@');
-    const domain = email.slice(at + 1);
-    const dot = domain.lastIndexOf('.');
-    if (!email || email.length > 254 || /\s/u.test(email)
-      || at <= 0 || at !== email.lastIndexOf('@') || dot <= 0 || dot === domain.length - 1) {
+    if (!isValidEmail(leadData.email)) {
       this.fieldErrors['lead_email'] = 'A valid email address is required.';
     }
 

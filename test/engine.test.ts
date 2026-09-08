@@ -47,6 +47,12 @@ describe('Engine: Input Sanitization & Validation', () => {
     expect(sanitizeInput('<script>unterminated')).toBe('');
   });
 
+  it('rejects adversarial schema-field email input', () => {
+    const field: QuoteField = { id: 'email', label: 'Email', type: 'email' };
+    expect(validateField(field, '!@!.' + '!.'.repeat(10000)).valid).toBe(false);
+    expect(validateField(field, 'alex@example.com').valid).toBe(true);
+  });
+
   it('validates required fields', () => {
     const field: QuoteField = {
       id: 'test_field',
