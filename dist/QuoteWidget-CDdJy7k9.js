@@ -1265,9 +1265,11 @@ var O = class {
 	}
 	async submitLead(e) {
 		let t = this.schema.leadForm;
-		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), (!e.email || String(e.email).length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e.email))) && (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
+		this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required.");
+		let r = String(e.email || ""), i = r.indexOf("@"), a = r.slice(i + 1), o = a.lastIndexOf(".");
+		if ((!r || r.length > 254 || /\s/u.test(r) || i <= 0 || i !== r.lastIndexOf("@") || o <= 0 || o === a.length - 1) && (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
 		this.isSubmitting = !0, this.render();
-		let r = u({ sourceLabel: this.sourceLabel }), i = {
+		let s = u({ sourceLabel: this.sourceLabel }), c = {
 			quoteId: this.currentQuote.quoteId,
 			schemaId: this.schema.id,
 			schemaName: this.schema.name,
@@ -1283,20 +1285,20 @@ var O = class {
 				preferredTime: n(e.preferredTime || ""),
 				notes: n(e.notes || "")
 			},
-			attribution: r,
+			attribution: s,
 			submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
 			metadata: this.schema.metadata
 		};
 		try {
 			if (this.webhookUrl) {
-				let e = await T(this.webhookUrl, i);
-				(e.status === "rejected" || e.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", e.message), i.delivery = e;
-			} else i.delivery = this.callbacks.onSubmit ? w() : C();
+				let e = await T(this.webhookUrl, c);
+				(e.status === "rejected" || e.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", e.message), c.delivery = e;
+			} else c.delivery = this.callbacks.onSubmit ? w() : C();
 			if (this.callbacks.onSubmit) try {
-				await this.callbacks.onSubmit(i);
+				await this.callbacks.onSubmit(c);
 			} catch (e) {
-				i.localHandlingFailed = !0, i.delivery?.channel === "callback" && (i.delivery = {
-					...i.delivery,
+				c.localHandlingFailed = !0, c.delivery?.channel === "callback" && (c.delivery = {
+					...c.delivery,
 					status: "failed",
 					ok: !1,
 					message: "The page handler failed. No external delivery was attempted by the widget. Your quote is shown below."
@@ -1306,9 +1308,9 @@ var O = class {
 				} catch {}
 			}
 			try {
-				h(this.schema.id, i.quoteId, this.currentQuote.target, i.lead.email);
+				h(this.schema.id, c.quoteId, this.currentQuote.target, c.lead.email);
 			} catch {}
-			return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = i, this.lastDeliveryReceipt = i.delivery ?? null, this.render(), i;
+			return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = c, this.lastDeliveryReceipt = c.delivery ?? null, this.render(), c;
 		} catch (e) {
 			return this.isSubmitting = !1, this.callbacks.onError && this.callbacks.onError(e), this.fieldErrors._global = "Submission failed. Please check your connection and try again.", this.render(), null;
 		}

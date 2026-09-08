@@ -214,8 +214,12 @@ export class NymrelQuoteWidget {
       this.fieldErrors['lead_name'] = 'Full Name is required.';
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!leadData.email || String(leadData.email).length > 254 || !emailRegex.test(String(leadData.email))) {
+    const email = String(leadData.email || '');
+    const at = email.indexOf('@');
+    const domain = email.slice(at + 1);
+    const dot = domain.lastIndexOf('.');
+    if (!email || email.length > 254 || /\s/u.test(email)
+      || at <= 0 || at !== email.lastIndexOf('@') || dot <= 0 || dot === domain.length - 1) {
       this.fieldErrors['lead_email'] = 'A valid email address is required.';
     }
 
