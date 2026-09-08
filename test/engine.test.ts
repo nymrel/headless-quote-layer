@@ -40,6 +40,13 @@ describe('Engine: Input Sanitization & Validation', () => {
     expect(sanitizeInput(dirty)).toBe('Hello World!');
   });
 
+  it('normalizes malformed and spaced script tags to plain text', () => {
+    expect(sanitizeInput('<script>alert(1)</script ><b>Hello</b>')).toBe('Hello');
+    expect(sanitizeInput('İ<script>alert(1)</script> safe')).toBe('İ safe');
+    expect(sanitizeInput('<<script>alert(1)</script>')).not.toMatch(/[<>]/);
+    expect(sanitizeInput('<script>unterminated')).toBe('');
+  });
+
   it('validates required fields', () => {
     const field: QuoteField = {
       id: 'test_field',

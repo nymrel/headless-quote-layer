@@ -1,7 +1,7 @@
 //#region src/core/engine.ts
 function e(e = "NYM") {
 	let t = /* @__PURE__ */ new Date();
-	return `${e}-${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, "0")}${String(t.getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+	return `${e}-${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, "0")}${String(t.getDate()).padStart(2, "0")}-${Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(6)), (e) => (e % 36).toString(36)).join("").toUpperCase()}`;
 }
 function t(e, t = "USD", n = "$", r = 0) {
 	if (isNaN(e) || e == null) return `${n}0`;
@@ -9,7 +9,19 @@ function t(e, t = "USD", n = "$", r = 0) {
 	return i[0] = i[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${n}${i.join(".")}`;
 }
 function n(e) {
-	return e == null ? e : typeof e == "string" ? e.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<[^>]*>/g, "").replace(/[<>]/g, "").trim() : typeof e == "number" ? isNaN(e) ? 0 : e : Array.isArray(e) ? e.map(n) : e;
+	if (e == null) return e;
+	if (typeof e == "string") {
+		let t = "", n = !1, r = !1;
+		for (let i = 0; i < e.length; i += 1) {
+			let a = e[i];
+			if (a === "<") {
+				let t = e.slice(i, i + 7).toLowerCase() === "<script", a = e.slice(i, i + 8).toLowerCase() === "<\/script", o = e[i + (a ? 8 : 7)];
+				(t || a) && (o === ">" || /\s/u.test(o || "")) && (r = t), n = !0;
+			} else a === ">" ? n = !1 : !n && !r && (t += a);
+		}
+		return t.trim();
+	}
+	return typeof e == "number" ? isNaN(e) ? 0 : e : Array.isArray(e) ? e.map(n) : e;
 }
 function r(e, t) {
 	if (!e || !e.fieldId) return !0;
@@ -210,7 +222,7 @@ function o(n, i) {
 //#endregion
 //#region src/core/attribution.ts
 function s() {
-	return "sess_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+	return "sess_" + Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(16)), (e) => e.toString(16).padStart(2, "0")).join("");
 }
 function c() {
 	if (typeof window > "u") return "desktop";
@@ -1253,7 +1265,7 @@ var O = class {
 	}
 	async submitLead(e) {
 		let t = this.schema.leadForm;
-		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), (!e.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e.email))) && (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
+		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), (!e.email || String(e.email).length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e.email))) && (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
 		this.isSubmitting = !0, this.render();
 		let r = u({ sourceLabel: this.sourceLabel }), i = {
 			quoteId: this.currentQuote.quoteId,

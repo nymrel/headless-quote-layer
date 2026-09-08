@@ -69,6 +69,13 @@ afterEach(() => {
 });
 
 describe('lead validation contract', () => {
+  it('rejects an overlong adversarial email before delivery', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { widget } = createWidget({}, { webhookUrl: 'https://example.test/lead' });
+    expect(await widget.submitLead({ name: 'Alex', email: '!@!.' + '!.'.repeat(10000) })).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
   it('accepts an ordinary email address', async () => {
     const { widget } = createWidget();
     const submission = await widget.submitLead({

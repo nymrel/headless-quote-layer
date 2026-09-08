@@ -1,4 +1,4 @@
-import { C as e, E as t, S as n, T as r, _ as i, a, b as o, c as s, d as c, f as l, g as u, h as d, i as f, l as p, m, o as h, p as g, r as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-tyza_4TZ.js";
+import { C as e, E as t, S as n, T as r, _ as i, a, b as o, c as s, d as c, f as l, g as u, h as d, i as f, l as p, m, o as h, p as g, r as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-Bnme2tBO.js";
 import { useCallback as T, useEffect as E, useRef as D, useState as O } from "react";
 import { jsx as k } from "react/jsx-runtime";
 //#region src/components/ReactQuoteWidget.tsx

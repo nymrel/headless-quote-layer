@@ -215,7 +215,7 @@ export class NymrelQuoteWidget {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!leadData.email || !emailRegex.test(String(leadData.email))) {
+    if (!leadData.email || String(leadData.email).length > 254 || !emailRegex.test(String(leadData.email))) {
       this.fieldErrors['lead_email'] = 'A valid email address is required.';
     }
 

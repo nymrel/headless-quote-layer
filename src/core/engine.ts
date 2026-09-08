@@ -20,7 +20,8 @@ export function generateQuoteId(prefix = 'NYM'): string {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const random = Array.from(globalThis.crypto.getRandomValues(new Uint8Array(6)),
+    byte => (byte % 36).toString(36)).join('').toUpperCase();
   return `${prefix}-${year}${month}${day}-${random}`;
 }
 
@@ -53,12 +54,28 @@ export function formatCurrency(
 export function sanitizeInput(val: any): any {
   if (val === null || val === undefined) return val;
   if (typeof val === 'string') {
-    // Strip script tags and HTML tags cleanly
-    return val
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<[^>]*>/g, '')
-      .replace(/[<>]/g, '')
-      .trim();
+    // Normalize to plain text in one linear pass. This is not an HTML sanitizer:
+    // renderers must still escape text before placing it in an HTML context.
+    let output = '';
+    let inTag = false;
+    let inScript = false;
+    for (let index = 0; index < val.length; index += 1) {
+      const char = val[index];
+      if (char === '<') {
+        const opening = val.slice(index, index + 7).toLowerCase() === '<script';
+        const closing = val.slice(index, index + 8).toLowerCase() === '</script';
+        const afterName = val[index + (closing ? 8 : 7)];
+        if ((opening || closing) && (afterName === '>' || /\s/u.test(afterName || ''))) {
+          inScript = opening;
+        }
+        inTag = true;
+      } else if (char === '>') {
+        inTag = false;
+      } else if (!inTag && !inScript) {
+        output += char;
+      }
+    }
+    return output.trim();
   }
   if (typeof val === 'number') {
     return isNaN(val) ? 0 : val;
