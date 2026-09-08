@@ -1,10 +1,10 @@
-import { C as e, E as t, S as n, T as r, _ as i, a, b as o, c as s, d as c, f as l, g as u, h as d, i as f, l as p, m, o as h, p as g, r as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-CDdJy7k9.js";
-import { useCallback as T, useEffect as E, useRef as D, useState as O } from "react";
-import { jsx as k } from "react/jsx-runtime";
+import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, i as p, l as m, m as h, o as g, p as _, r as v, s as y, t as b, u as x, v as S, w as C, x as w, y as T } from "./QuoteWidget-R7q69x3D.js";
+import { useCallback as E, useEffect as D, useRef as O, useState as k } from "react";
+import { jsx as A } from "react/jsx-runtime";
 //#region src/components/ReactQuoteWidget.tsx
-var A = ({ schema: e, initialState: t, theme: n, sourceLabel: r, webhookUrl: i, useShadowDom: a = !0, onCalculate: o, onStepChange: s, onSubmit: c, onError: l, className: u, style: d }) => {
-	let f = D(null), p = D(null);
-	return E(() => {
+var j = ({ schema: e, initialState: t, theme: n, sourceLabel: r, webhookUrl: i, useShadowDom: a = !0, onCalculate: o, onStepChange: s, onSubmit: c, onError: l, className: u, style: d }) => {
+	let f = O(null), p = O(null);
+	return D(() => {
 		if (!f.current) return;
 		let u = n ? {
 			...e,
@@ -12,7 +12,7 @@ var A = ({ schema: e, initialState: t, theme: n, sourceLabel: r, webhookUrl: i, 
 				...e.theme,
 				...n
 			}
-		} : e, d = new y(f.current, {
+		} : e, d = new b(f.current, {
 			schema: u,
 			initialState: t,
 			sourceLabel: r,
@@ -34,14 +34,14 @@ var A = ({ schema: e, initialState: t, theme: n, sourceLabel: r, webhookUrl: i, 
 		r,
 		i,
 		a
-	]), /* @__PURE__ */ k("div", {
+	]), /* @__PURE__ */ A("div", {
 		ref: f,
 		className: `nymrel-quote-widget-root ${u || ""}`.trim(),
 		style: d
 	});
 };
-function j(e, n) {
-	let [i, a] = O(() => {
+function M(e, r) {
+	let [i, a] = k(() => {
 		let t = {};
 		return e.steps.forEach((e) => {
 			e.fields.forEach((e) => {
@@ -49,31 +49,31 @@ function j(e, n) {
 			});
 		}), {
 			...t,
-			...n
+			...r
 		};
-	}), [o, s] = O(0), [c, d] = O(() => C(e, i)), [p, m] = O({}), [h, g] = O(!1), [v, y] = O(!1), [b, x] = O(null), [S, w] = O(null);
-	return E(() => {
-		let t = C(e, i);
-		d(t);
+	}), [o, s] = k(0), [c, l] = k(() => w(e, i)), [f, m] = k({}), [h, g] = k(!1), [_, y] = k(!1), [b, x] = k(null), [S, C] = k(null);
+	return D(() => {
+		let t = w(e, i);
+		l(t);
 	}, [e, i]), {
 		quote: c,
 		formState: i,
 		currentStepIndex: o,
-		fieldErrors: p,
+		fieldErrors: f,
 		isSubmitting: h,
-		isSubmitted: v,
+		isSubmitted: _,
 		lastSubmission: b,
 		deliveryReceipt: S,
-		updateField: T((e, t) => {
-			a((n) => ({
-				...n,
-				[e]: r(t)
+		updateField: E((e, t) => {
+			a((r) => ({
+				...r,
+				[e]: n(t)
 			})), m((t) => {
 				let n = { ...t };
 				return delete n[e], n;
 			});
 		}, []),
-		nextStep: T(() => {
+		nextStep: E(() => {
 			let n = e.steps[o];
 			if (!n) return !1;
 			let r = !1, a = {};
@@ -87,42 +87,42 @@ function j(e, n) {
 			o,
 			i
 		]),
-		prevStep: T(() => {
+		prevStep: E(() => {
 			o > 0 && s((e) => e - 1);
 		}, [o]),
-		submitLead: T(async (t, n = {}) => {
+		submitLead: E(async (t, r = {}) => {
 			g(!0);
-			let a = l({ sourceLabel: n.sourceLabel }), o = {
+			let a = u({ sourceLabel: r.sourceLabel }), o = {
 				quoteId: c.quoteId,
 				schemaId: e.id,
 				schemaName: e.name,
 				quote: c,
 				formState: i,
 				lead: {
-					name: r(t.name),
-					email: r(t.email),
-					phone: r(t.phone || ""),
-					address: r(t.address || ""),
-					zipCode: r(t.zipCode || ""),
-					preferredDate: r(t.preferredDate || ""),
-					preferredTime: r(t.preferredTime || ""),
-					notes: r(t.notes || "")
+					name: n(t.name),
+					email: n(t.email),
+					phone: n(t.phone || ""),
+					address: n(t.address || ""),
+					zipCode: n(t.zipCode || ""),
+					preferredDate: n(t.preferredDate || ""),
+					preferredTime: n(t.preferredTime || ""),
+					notes: n(t.notes || "")
 				},
 				attribution: a,
 				submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
 				metadata: e.metadata
 			};
-			if (n.webhookUrl) {
-				let e = await f(n.webhookUrl, o);
+			if (r.webhookUrl) {
+				let e = await p(r.webhookUrl, o);
 				(e.status === "rejected" || e.status === "failed") && console.warn("[useQuoteEngine] Webhook delivery notice:", e.message), o.delivery = e;
-			} else o.delivery = _();
-			return u(e.id, o.quoteId, c.target, o.lead.email), g(!1), y(!0), x(o), w(o.delivery ?? null), o;
+			} else o.delivery = v();
+			return d(e.id, o.quoteId, c.target, o.lead.email), g(!1), y(!0), x(o), C(o.delivery ?? null), o;
 		}, [
 			e,
 			c,
 			i
 		]),
-		reset: T(() => {
+		reset: E(() => {
 			let t = {};
 			e.steps.forEach((e) => {
 				e.fields.forEach((e) => {
@@ -130,10 +130,10 @@ function j(e, n) {
 				});
 			}), a({
 				...t,
-				...n
-			}), s(0), y(!1), g(!1), x(null), w(null), m({});
-		}, [e, n])
+				...r
+			}), s(0), y(!1), g(!1), x(null), C(null), m({});
+		}, [e, r])
 	};
 }
 //#endregion
-export { a as DARK_THEME, h as DEFAULT_WARM_THEME, v as LIGHT_THEME, A as QuoteWidget, o as applyRounding, C as calculateQuote, c as emitAnalyticsEvent, n as evaluateCondition, l as extractAttribution, e as formatCurrency, s as generateCssVariables, S as generateQuoteId, g as getDeviceType, m as getReferringDomain, p as getShadowStyles, b as resolveTheme, r as sanitizeInput, d as trackCtaClicked, u as trackLeadSubmitted, i as trackQuoteCalculated, x as trackQuoteViewed, w as trackStepCompleted, j as useQuoteEngine, t as validateField };
+export { o as DARK_THEME, g as DEFAULT_WARM_THEME, y as LIGHT_THEME, j as QuoteWidget, s as applyRounding, w as calculateQuote, l as emitAnalyticsEvent, r as evaluateCondition, u as extractAttribution, e as formatCurrency, c as generateCssVariables, C as generateQuoteId, _ as getDeviceType, h as getReferringDomain, m as getShadowStyles, i as isValidEmail, x as resolveTheme, n as sanitizeInput, f as trackCtaClicked, d as trackLeadSubmitted, a as trackQuoteCalculated, S as trackQuoteViewed, T as trackStepCompleted, M as useQuoteEngine, t as validateField };

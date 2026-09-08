@@ -128,7 +128,8 @@ export function evaluateCondition(
  * Validate a field value according to field constraints
  */
 export function isValidEmail(value: unknown): boolean {
-  const email = String(value || '');
+  if (typeof value !== 'string') return false;
+  const email = value;
   if (!email || email.length > 254 || /\s/u.test(email)) return false;
   const at = email.indexOf('@');
   const domain = email.slice(at + 1);

@@ -22,6 +22,7 @@ export declare function evaluateCondition(condition: FieldCondition | undefined,
 /**
  * Validate a field value according to field constraints
  */
+export declare function isValidEmail(value: unknown): boolean;
 export declare function validateField(field: QuoteField, value: any): {
     valid: boolean;
     error?: string;

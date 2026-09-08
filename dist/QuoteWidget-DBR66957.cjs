@@ -1,4 +1,4 @@
-function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getMonth()+1).padStart(2,`0`)}${String(t.getDate()).padStart(2,`0`)}-${Array.from(globalThis.crypto.getRandomValues(new Uint8Array(6)),e=>(e%36).toString(36)).join(``).toUpperCase()}`}function t(e,t=`USD`,n=`$`,r=0){if(isNaN(e)||e==null)return`${n}0`;let i=(r>0?e.toFixed(r):Math.round(e).toString()).split(`.`);return i[0]=i[0].replace(/\B(?=(\d{3})+(?!\d))/g,`,`),`${n}${i.join(`.`)}`}function n(e){if(e==null)return e;if(typeof e==`string`){let t=``,n=!1,r=!1;for(let i=0;i<e.length;i+=1){let a=e[i];if(a===`<`){let t=e.slice(i,i+7).toLowerCase()===`<script`,a=e.slice(i,i+8).toLowerCase()===`<\/script`,o=e[i+(a?8:7)];(t||a)&&(o===`>`||/\s/u.test(o||``))&&(r=t),n=!0}else a===`>`?n=!1:!n&&!r&&(t+=a)}return t.trim()}return typeof e==`number`?isNaN(e)?0:e:Array.isArray(e)?e.map(n):e}function r(e,t){if(!e||!e.fieldId)return!0;let n=t[e.fieldId];switch(e.operator){case`equals`:return n===e.value||String(n)===String(e.value);case`notEquals`:return n!==e.value&&String(n)!==String(e.value);case`greaterThan`:return Number(n)>Number(e.value);case`lessThan`:return Number(n)<Number(e.value);case`in`:return Array.isArray(e.value)?e.value.includes(n):!1;case`contains`:return Array.isArray(n)?n.includes(e.value):typeof n==`string`&&n.includes(String(e.value));default:return!0}}function i(e,t){if(e.required&&(t==null||t===``||Array.isArray(t)&&t.length===0))return{valid:!1,error:`${e.label} is required.`};if(t!=null&&t!==``){if(e.type===`number`||e.type===`slider`||e.type===`stepper`){let n=Number(t);if(isNaN(n))return{valid:!1,error:`${e.label} must be a valid number.`};if(e.min!==void 0&&n<e.min)return{valid:!1,error:`Minimum value is ${e.min} ${e.unit||``}`.trim()};if(e.max!==void 0&&n>e.max)return{valid:!1,error:`Maximum value is ${e.max} ${e.unit||``}`.trim()}}if(e.type===`email`&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(t)))return{valid:!1,error:`Please enter a valid email address.`};if(e.type===`phone`){let e=String(t).replace(/[\s()\-\.]/g,``);if(e.length<7||!/^\+?[0-9]{7,15}$/.test(e))return{valid:!1,error:`Please enter a valid phone number.`}}}return{valid:!0}}function a(e,t){if(!t||t===`none`)return e;switch(t){case`round`:return Math.round(e);case`ceil`:return Math.ceil(e);case`floor`:return Math.floor(e);case`nearest10`:return Math.round(e/10)*10;case`nearest50`:return Math.round(e/50)*50;case`nearest100`:return Math.round(e/100)*100;default:return e}}function o(n,i){let o=n.pricing?.currency||`USD`,s=n.pricing?.currencySymbol||`$`,c=n.pricing||{},l=i._quoteId||e(),u=[];if(n.steps.forEach(e=>{e.fields.forEach(e=>{u.push(e)})}),c.formula===`custom`&&typeof c.customFormula==`function`){let e=c.customFormula(i,u),n=a(e.target,c.rounding),r=a(e.min,c.rounding),d=a(e.max,c.rounding);return{min:r,max:d,target:n,formattedMin:t(r,o,s),formattedMax:t(d,o,s),formattedTarget:t(n,o,s),currency:o,currencySymbol:s,breakdown:e.breakdown||[],recommendations:[],calculatedAt:new Date().toISOString(),quoteId:l}}let d=Number(c.baseFee||c.baseCalloutFee||0),f=0,p=0,m=0,h=1,g=[],_=[];d>0&&g.push({id:`base-fee`,label:`Base Callout / Setup Fee`,amount:d,formattedAmount:t(d,o,s),type:`base`,description:`Standard initial mobilization and inspection base`});for(let e of u){if(!r(e.condition,i))continue;let n=i[e.id]===void 0?e.defaultValue:i[e.id];if(n!=null&&n!==``){if(e.type===`number`||e.type===`slider`||e.type===`stepper`){let r=Number(n);if(!isNaN(r)&&r>0){if(e.unitPrice&&e.unitPrice>0){let n=r*e.unitPrice;e.category===`material`?f+=n:p+=n,g.push({id:e.id,label:`${e.label} (${r} ${e.unit||`units`} @ ${t(e.unitPrice,o,s)}/${e.unit||`unit`})`,amount:n,formattedAmount:t(n,o,s),type:e.category===`material`?`material`:`labor`})}e.multiplier&&e.multiplier!==1&&(h*=e.multiplier)}}if((e.type===`select`||e.type===`radio`||e.type===`toggle`)&&e.options&&e.options.length>0){let r=e.options.find(e=>String(e.id)===String(n)||String(e.value)===String(n));if(r){if(r.adder&&Number(r.adder)!==0){let n=Number(r.adder);m+=n,g.push({id:`${e.id}-${r.id}`,label:`${e.label}: ${r.label}`,amount:n,formattedAmount:t(n,o,s),type:e.category===`material`?`material`:`addon`,description:r.description})}if(r.multiplier&&Number(r.multiplier)!==1){let t=Number(r.multiplier);h*=t,g.push({id:`${e.id}-${r.id}-mult`,label:`${r.label} Factor (${t}x)`,amount:0,formattedAmount:`${t}x`,type:`multiplier`,description:r.description})}}}if(e.type===`checkbox`){if(Array.isArray(n)&&e.options)for(let r of n){let n=e.options.find(e=>String(e.id)===String(r)||String(e.value)===String(r));if(n){if(n.adder&&Number(n.adder)!==0){let r=Number(n.adder);m+=r,g.push({id:`${e.id}-${n.id}`,label:n.label,amount:r,formattedAmount:t(r,o,s),type:`addon`,description:n.description})}n.multiplier&&Number(n.multiplier)!==1&&(h*=Number(n.multiplier))}}else typeof n==`boolean`&&n===!0&&(e.unitPrice&&(m+=e.unitPrice,g.push({id:e.id,label:e.label,amount:e.unitPrice,formattedAmount:t(e.unitPrice,o,s),type:`addon`})),e.multiplier&&e.multiplier!==1&&(h*=e.multiplier))}}}let v=d+f+p+m,y=v*h;if(c.taxRate&&c.taxRate>0){let e=y*c.taxRate;g.push({id:`tax`,label:`Estimated Tax (${(c.taxRate*100).toFixed(1)}%)`,amount:e,formattedAmount:t(e,o,s),type:`tax`}),y+=e}let b=c.marginPercent?c.marginPercent/100:.1,x=c.minRangeSpreadPercent?c.minRangeSpreadPercent/100:b,S=c.maxRangeSpreadPercent?c.maxRangeSpreadPercent/100:b,C=Math.max(0,y),w=Math.max(0,C*(1-x)),T=Math.max(w,C*(1+S));v===0&&d===0&&(C=0,w=0,T=0);let E=a(C,c.rounding),D=a(w,c.rounding),O=a(T,c.rounding);return(i.pitch===`steep`||i.difficulty===`extreme`||i.urgency===`emergency`)&&_.push(`Priority Crew Dispatch: Includes safety rigging and on-site supervisor.`),E>5e3&&_.push(`Flexible Financing Available: 0% APR for 12 months on qualifying projects.`),(i.material===`metal`||i.efficiency===`ultra`)&&_.push(`Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty.`),{min:D,max:O,target:E,formattedMin:t(D,o,s),formattedMax:t(O,o,s),formattedTarget:t(E,o,s),currency:o,currencySymbol:s,breakdown:g,recommendations:_,calculatedAt:new Date().toISOString(),quoteId:l}}function s(){return`sess_`+Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)),e=>e.toString(16).padStart(2,`0`)).join(``)}function c(){if(typeof window>`u`)return`desktop`;let e=navigator.userAgent.toLowerCase(),t=window.innerWidth||1024;return/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(e)||t>=768&&t<=1024?`tablet`:/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(e)||t<768?`mobile`:`desktop`}function l(e){if(!e)return``;try{return new URL(e).hostname}catch{return``}}function u(e={}){let t=typeof window<`u`,n=t?new URLSearchParams(window.location.search):new URLSearchParams,r=t&&document.referrer||``,i=t&&window.location.href||``,a=t&&document.title||``,o=t&&navigator.userAgent||``,u=e.customSessionId||``;if(!u&&t){let t=e.storageKey||`nymrel_quote_session_id`;try{u=window.sessionStorage.getItem(t)||``,u||(u=s(),window.sessionStorage.setItem(t,u))}catch{u=s()}}else u||=s();return{utm_source:n.get(`utm_source`)||void 0,utm_medium:n.get(`utm_medium`)||void 0,utm_campaign:n.get(`utm_campaign`)||void 0,utm_term:n.get(`utm_term`)||void 0,utm_content:n.get(`utm_content`)||void 0,gclid:n.get(`gclid`)||void 0,fbclid:n.get(`fbclid`)||void 0,msclkid:n.get(`msclkid`)||void 0,ttclid:n.get(`ttclid`)||void 0,li_fat_id:n.get(`li_fat_id`)||void 0,referrer:r,referring_domain:l(r),landing_page:i,page_title:a,timestamp:new Date().toISOString(),source_label:e.sourceLabel,session_id:u,device_type:c(),userAgent:o}}function d(e,t={},n={}){if(typeof window>`u`)return;let r=n.pushToDataLayer!==!1,i=n.useGtag!==!1,a=n.dispatchDomEvent!==!1,o=`${n.prefix||`nymrel_quote`}_${e}`,s={event:o,...t,timestamp:new Date().toISOString()};if(r){let e=window;e.dataLayer=e.dataLayer||[],e.dataLayer.push(s)}if(i){let e=window;typeof e.gtag==`function`&&e.gtag(`event`,o,t)}if(a)try{let e=new CustomEvent(o,{bubbles:!0,cancelable:!0,detail:s});window.dispatchEvent(e)}catch{}}function f(e,t){d(`viewed`,{schemaId:e,...t})}function p(e,t,n,r){d(`step_completed`,{schemaId:e,stepIndex:t,stepTitle:n,timeSpentMs:r})}function m(e,t,n,r,i){d(`calculated`,{schemaId:e,target:t,min:n,max:r,quoteId:i})}function h(e,t,n,r){d(`lead_submitted`,{schemaId:e,quoteId:t,value:n,currency:`USD`,hasEmail:!!r})}function g(e,t,n){d(`cta_clicked`,{schemaId:e,ctaName:t,quoteId:n})}var _={mode:`warm`,fontFamily:`-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, "Helvetica Neue", sans-serif`,primaryColor:`#2A332E`,accentColor:`#A8541F`,accentHoverColor:`#8E4316`,backgroundColor:`#FAF8F2`,surfaceColor:`#F4F0E6`,cardColor:`#FFFFFF`,textColor:`#2A332E`,mutedTextColor:`#637069`,borderColor:`#E2DCCE`,borderRadius:`14px`,boxShadow:`0 8px 30px -4px rgba(42, 51, 46, 0.08), 0 2px 8px -2px rgba(42, 51, 46, 0.04)`,focusRingColor:`rgba(168, 84, 31, 0.28)`},v={mode:`light`,fontFamily:`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,primaryColor:`#0F172A`,accentColor:`#2563EB`,accentHoverColor:`#1D4ED8`,backgroundColor:`#F8FAFC`,surfaceColor:`#F1F5F9`,cardColor:`#FFFFFF`,textColor:`#0F172A`,mutedTextColor:`#64748B`,borderColor:`#E2E8F0`,borderRadius:`12px`,boxShadow:`0 4px 20px -2px rgba(0, 0, 0, 0.06)`,focusRingColor:`rgba(37, 99, 235, 0.25)`},y={mode:`dark`,fontFamily:`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,primaryColor:`#F1F5F9`,accentColor:`#F97316`,accentHoverColor:`#EA580C`,backgroundColor:`#0F172A`,surfaceColor:`#1E293B`,cardColor:`#1E293B`,textColor:`#F8FAFC`,mutedTextColor:`#94A3B8`,borderColor:`#334155`,borderRadius:`12px`,boxShadow:`0 8px 30px -4px rgba(0, 0, 0, 0.4)`,focusRingColor:`rgba(249, 115, 22, 0.3)`};function b(e){return{...e?.mode===`dark`?y:e?.mode===`light`?v:_,...e}}function x(e){return`
+function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getMonth()+1).padStart(2,`0`)}${String(t.getDate()).padStart(2,`0`)}-${Array.from(globalThis.crypto.getRandomValues(new Uint8Array(6)),e=>(e%36).toString(36)).join(``).toUpperCase()}`}function t(e,t=`USD`,n=`$`,r=0){if(isNaN(e)||e==null)return`${n}0`;let i=(r>0?e.toFixed(r):Math.round(e).toString()).split(`.`);return i[0]=i[0].replace(/\B(?=(\d{3})+(?!\d))/g,`,`),`${n}${i.join(`.`)}`}function n(e){if(e==null)return e;if(typeof e==`string`){let t=``,n=!1,r=!1;for(let i=0;i<e.length;i+=1){let a=e[i];if(a===`<`){let t=e.slice(i,i+7).toLowerCase()===`<script`,a=e.slice(i,i+8).toLowerCase()===`<\/script`,o=e[i+(a?8:7)];(t||a)&&(o===`>`||/\s/u.test(o||``))&&(r=t),n=!0}else a===`>`?n=!1:!n&&!r&&(t+=a)}return t.trim()}return typeof e==`number`?isNaN(e)?0:e:Array.isArray(e)?e.map(n):e}function r(e,t){if(!e||!e.fieldId)return!0;let n=t[e.fieldId];switch(e.operator){case`equals`:return n===e.value||String(n)===String(e.value);case`notEquals`:return n!==e.value&&String(n)!==String(e.value);case`greaterThan`:return Number(n)>Number(e.value);case`lessThan`:return Number(n)<Number(e.value);case`in`:return Array.isArray(e.value)?e.value.includes(n):!1;case`contains`:return Array.isArray(n)?n.includes(e.value):typeof n==`string`&&n.includes(String(e.value));default:return!0}}function i(e){if(typeof e!=`string`)return!1;let t=e;if(!t||t.length>254||/\s/u.test(t))return!1;let n=t.indexOf(`@`),r=t.slice(n+1),i=r.lastIndexOf(`.`);return n>0&&n===t.lastIndexOf(`@`)&&i>0&&i<r.length-1}function a(e,t){if(e.required&&(t==null||t===``||Array.isArray(t)&&t.length===0))return{valid:!1,error:`${e.label} is required.`};if(t!=null&&t!==``){if(e.type===`number`||e.type===`slider`||e.type===`stepper`){let n=Number(t);if(isNaN(n))return{valid:!1,error:`${e.label} must be a valid number.`};if(e.min!==void 0&&n<e.min)return{valid:!1,error:`Minimum value is ${e.min} ${e.unit||``}`.trim()};if(e.max!==void 0&&n>e.max)return{valid:!1,error:`Maximum value is ${e.max} ${e.unit||``}`.trim()}}if(e.type===`email`&&!i(t))return{valid:!1,error:`Please enter a valid email address.`};if(e.type===`phone`){let e=String(t).replace(/[\s()\-\.]/g,``);if(e.length<7||!/^\+?[0-9]{7,15}$/.test(e))return{valid:!1,error:`Please enter a valid phone number.`}}}return{valid:!0}}function o(e,t){if(!t||t===`none`)return e;switch(t){case`round`:return Math.round(e);case`ceil`:return Math.ceil(e);case`floor`:return Math.floor(e);case`nearest10`:return Math.round(e/10)*10;case`nearest50`:return Math.round(e/50)*50;case`nearest100`:return Math.round(e/100)*100;default:return e}}function s(n,i){let a=n.pricing?.currency||`USD`,s=n.pricing?.currencySymbol||`$`,c=n.pricing||{},l=i._quoteId||e(),u=[];if(n.steps.forEach(e=>{e.fields.forEach(e=>{u.push(e)})}),c.formula===`custom`&&typeof c.customFormula==`function`){let e=c.customFormula(i,u),n=o(e.target,c.rounding),r=o(e.min,c.rounding),d=o(e.max,c.rounding);return{min:r,max:d,target:n,formattedMin:t(r,a,s),formattedMax:t(d,a,s),formattedTarget:t(n,a,s),currency:a,currencySymbol:s,breakdown:e.breakdown||[],recommendations:[],calculatedAt:new Date().toISOString(),quoteId:l}}let d=Number(c.baseFee||c.baseCalloutFee||0),f=0,p=0,m=0,h=1,g=[],_=[];d>0&&g.push({id:`base-fee`,label:`Base Callout / Setup Fee`,amount:d,formattedAmount:t(d,a,s),type:`base`,description:`Standard initial mobilization and inspection base`});for(let e of u){if(!r(e.condition,i))continue;let n=i[e.id]===void 0?e.defaultValue:i[e.id];if(n!=null&&n!==``){if(e.type===`number`||e.type===`slider`||e.type===`stepper`){let r=Number(n);if(!isNaN(r)&&r>0){if(e.unitPrice&&e.unitPrice>0){let n=r*e.unitPrice;e.category===`material`?f+=n:p+=n,g.push({id:e.id,label:`${e.label} (${r} ${e.unit||`units`} @ ${t(e.unitPrice,a,s)}/${e.unit||`unit`})`,amount:n,formattedAmount:t(n,a,s),type:e.category===`material`?`material`:`labor`})}e.multiplier&&e.multiplier!==1&&(h*=e.multiplier)}}if((e.type===`select`||e.type===`radio`||e.type===`toggle`)&&e.options&&e.options.length>0){let r=e.options.find(e=>String(e.id)===String(n)||String(e.value)===String(n));if(r){if(r.adder&&Number(r.adder)!==0){let n=Number(r.adder);m+=n,g.push({id:`${e.id}-${r.id}`,label:`${e.label}: ${r.label}`,amount:n,formattedAmount:t(n,a,s),type:e.category===`material`?`material`:`addon`,description:r.description})}if(r.multiplier&&Number(r.multiplier)!==1){let t=Number(r.multiplier);h*=t,g.push({id:`${e.id}-${r.id}-mult`,label:`${r.label} Factor (${t}x)`,amount:0,formattedAmount:`${t}x`,type:`multiplier`,description:r.description})}}}if(e.type===`checkbox`){if(Array.isArray(n)&&e.options)for(let r of n){let n=e.options.find(e=>String(e.id)===String(r)||String(e.value)===String(r));if(n){if(n.adder&&Number(n.adder)!==0){let r=Number(n.adder);m+=r,g.push({id:`${e.id}-${n.id}`,label:n.label,amount:r,formattedAmount:t(r,a,s),type:`addon`,description:n.description})}n.multiplier&&Number(n.multiplier)!==1&&(h*=Number(n.multiplier))}}else typeof n==`boolean`&&n===!0&&(e.unitPrice&&(m+=e.unitPrice,g.push({id:e.id,label:e.label,amount:e.unitPrice,formattedAmount:t(e.unitPrice,a,s),type:`addon`})),e.multiplier&&e.multiplier!==1&&(h*=e.multiplier))}}}let v=d+f+p+m,y=v*h;if(c.taxRate&&c.taxRate>0){let e=y*c.taxRate;g.push({id:`tax`,label:`Estimated Tax (${(c.taxRate*100).toFixed(1)}%)`,amount:e,formattedAmount:t(e,a,s),type:`tax`}),y+=e}let b=c.marginPercent?c.marginPercent/100:.1,x=c.minRangeSpreadPercent?c.minRangeSpreadPercent/100:b,S=c.maxRangeSpreadPercent?c.maxRangeSpreadPercent/100:b,C=Math.max(0,y),w=Math.max(0,C*(1-x)),T=Math.max(w,C*(1+S));v===0&&d===0&&(C=0,w=0,T=0);let E=o(C,c.rounding),D=o(w,c.rounding),O=o(T,c.rounding);return(i.pitch===`steep`||i.difficulty===`extreme`||i.urgency===`emergency`)&&_.push(`Priority Crew Dispatch: Includes safety rigging and on-site supervisor.`),E>5e3&&_.push(`Flexible Financing Available: 0% APR for 12 months on qualifying projects.`),(i.material===`metal`||i.efficiency===`ultra`)&&_.push(`Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty.`),{min:D,max:O,target:E,formattedMin:t(D,a,s),formattedMax:t(O,a,s),formattedTarget:t(E,a,s),currency:a,currencySymbol:s,breakdown:g,recommendations:_,calculatedAt:new Date().toISOString(),quoteId:l}}function c(){return`sess_`+Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)),e=>e.toString(16).padStart(2,`0`)).join(``)}function l(){if(typeof window>`u`)return`desktop`;let e=navigator.userAgent.toLowerCase(),t=window.innerWidth||1024;return/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(e)||t>=768&&t<=1024?`tablet`:/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(e)||t<768?`mobile`:`desktop`}function u(e){if(!e)return``;try{return new URL(e).hostname}catch{return``}}function d(e={}){let t=typeof window<`u`,n=t?new URLSearchParams(window.location.search):new URLSearchParams,r=t&&document.referrer||``,i=t&&window.location.href||``,a=t&&document.title||``,o=t&&navigator.userAgent||``,s=e.customSessionId||``;if(!s&&t){let t=e.storageKey||`nymrel_quote_session_id`;try{s=window.sessionStorage.getItem(t)||``,s||(s=c(),window.sessionStorage.setItem(t,s))}catch{s=c()}}else s||=c();return{utm_source:n.get(`utm_source`)||void 0,utm_medium:n.get(`utm_medium`)||void 0,utm_campaign:n.get(`utm_campaign`)||void 0,utm_term:n.get(`utm_term`)||void 0,utm_content:n.get(`utm_content`)||void 0,gclid:n.get(`gclid`)||void 0,fbclid:n.get(`fbclid`)||void 0,msclkid:n.get(`msclkid`)||void 0,ttclid:n.get(`ttclid`)||void 0,li_fat_id:n.get(`li_fat_id`)||void 0,referrer:r,referring_domain:u(r),landing_page:i,page_title:a,timestamp:new Date().toISOString(),source_label:e.sourceLabel,session_id:s,device_type:l(),userAgent:o}}function f(e,t={},n={}){if(typeof window>`u`)return;let r=n.pushToDataLayer!==!1,i=n.useGtag!==!1,a=n.dispatchDomEvent!==!1,o=`${n.prefix||`nymrel_quote`}_${e}`,s={event:o,...t,timestamp:new Date().toISOString()};if(r){let e=window;e.dataLayer=e.dataLayer||[],e.dataLayer.push(s)}if(i){let e=window;typeof e.gtag==`function`&&e.gtag(`event`,o,t)}if(a)try{let e=new CustomEvent(o,{bubbles:!0,cancelable:!0,detail:s});window.dispatchEvent(e)}catch{}}function p(e,t){f(`viewed`,{schemaId:e,...t})}function m(e,t,n,r){f(`step_completed`,{schemaId:e,stepIndex:t,stepTitle:n,timeSpentMs:r})}function h(e,t,n,r,i){f(`calculated`,{schemaId:e,target:t,min:n,max:r,quoteId:i})}function g(e,t,n,r){f(`lead_submitted`,{schemaId:e,quoteId:t,value:n,currency:`USD`,hasEmail:!!r})}function _(e,t,n){f(`cta_clicked`,{schemaId:e,ctaName:t,quoteId:n})}var v={mode:`warm`,fontFamily:`-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, "Helvetica Neue", sans-serif`,primaryColor:`#2A332E`,accentColor:`#A8541F`,accentHoverColor:`#8E4316`,backgroundColor:`#FAF8F2`,surfaceColor:`#F4F0E6`,cardColor:`#FFFFFF`,textColor:`#2A332E`,mutedTextColor:`#637069`,borderColor:`#E2DCCE`,borderRadius:`14px`,boxShadow:`0 8px 30px -4px rgba(42, 51, 46, 0.08), 0 2px 8px -2px rgba(42, 51, 46, 0.04)`,focusRingColor:`rgba(168, 84, 31, 0.28)`},y={mode:`light`,fontFamily:`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,primaryColor:`#0F172A`,accentColor:`#2563EB`,accentHoverColor:`#1D4ED8`,backgroundColor:`#F8FAFC`,surfaceColor:`#F1F5F9`,cardColor:`#FFFFFF`,textColor:`#0F172A`,mutedTextColor:`#64748B`,borderColor:`#E2E8F0`,borderRadius:`12px`,boxShadow:`0 4px 20px -2px rgba(0, 0, 0, 0.06)`,focusRingColor:`rgba(37, 99, 235, 0.25)`},b={mode:`dark`,fontFamily:`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,primaryColor:`#F1F5F9`,accentColor:`#F97316`,accentHoverColor:`#EA580C`,backgroundColor:`#0F172A`,surfaceColor:`#1E293B`,cardColor:`#1E293B`,textColor:`#F8FAFC`,mutedTextColor:`#94A3B8`,borderColor:`#334155`,borderRadius:`12px`,boxShadow:`0 8px 30px -4px rgba(0, 0, 0, 0.4)`,focusRingColor:`rgba(249, 115, 22, 0.3)`};function x(e){return{...e?.mode===`dark`?b:e?.mode===`light`?y:v,...e}}function S(e){return`
     --nym-font: ${e.fontFamily};
     --nym-primary: ${e.primaryColor};
     --nym-accent: ${e.accentColor};
@@ -14,7 +14,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
     --nym-focus: ${e.focusRingColor};
     --nym-success: #2E6B4F;
     --nym-error: #B83A2C;
-  `}function S(e){return`
+  `}function C(e){return`
     :host {
       display: block;
       box-sizing: border-box;
@@ -23,7 +23,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      ${x(b(e))}
+      ${S(x(e))}
     }
 
     *, *::before, *::after {
@@ -747,16 +747,16 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-  `}function C(e=new Date().toISOString()){return{status:`not_configured`,channel:`none`,attemptedAt:e,message:`Local capture only: no delivery destination is configured, so nothing was sent.`}}function w(e=new Date().toISOString()){return{status:`callback_only`,channel:`callback`,attemptedAt:e,message:`Captured locally and handed to this page. No external delivery was attempted.`}}async function T(e,t){let n=new Date().toISOString();try{let r=await fetch(e,{method:`POST`,headers:{"Content-Type":`application/json`,"X-Nymrel-Quote-Id":t.quoteId},body:JSON.stringify(t)});return r.ok?{status:`accepted`,channel:`webhook`,attemptedAt:n,httpStatus:r.status,ok:!0,message:`Your quote was accepted by the destination.`}:{status:`rejected`,channel:`webhook`,attemptedAt:n,httpStatus:r.status,ok:!1,message:`Delivery failed: the destination declined this quote (HTTP ${r.status}). Your quote is shown below for your records.`}}catch{return{status:`failed`,channel:`webhook`,attemptedAt:n,ok:!1,message:`Delivery failed: could not reach the destination. Your quote is shown below for your records.`}}}function E(e){return e?e.message:C().message}function D(e){return e==null?``:String(e).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`).replace(/'/g,`&#039;`)}var O=class{container;schema;callbacks;formState={};currentStepIndex=0;currentQuote;showBreakdownModal=!1;isSubmitted=!1;isSubmitting=!1;lastSubmission=null;lastDeliveryReceipt=null;sourceLabel;webhookUrl;fieldErrors={};stepStartTime=Date.now();constructor(e,t){this.schema=t.schema,this.callbacks=t.callbacks||{},this.sourceLabel=t.sourceLabel||this.schema.sourceLabel,this.webhookUrl=t.webhookUrl||this.schema.webhookUrl,this.schema.steps.forEach(e=>{e.fields.forEach(e=>{e.defaultValue!==void 0&&(this.formState[e.id]=e.defaultValue)})}),t.initialState&&(this.formState={...this.formState,...t.initialState}),this.container=t.useShadowDom!==!1&&e.attachShadow?e.shadowRoot?e.shadowRoot:e.attachShadow({mode:`open`}):e,this.currentQuote=o(this.schema,this.formState),f(this.schema.id,{sourceLabel:this.sourceLabel}),this.render()}updateState(e,t){this.formState[e]=n(t),delete this.fieldErrors[e],this.recalculate()}recalculate(){return this.currentQuote=o(this.schema,this.formState),m(this.schema.id,this.currentQuote.target,this.currentQuote.min,this.currentQuote.max,this.currentQuote.quoteId),this.callbacks.onCalculate&&this.callbacks.onCalculate(this.currentQuote,this.formState),this.render(),this.currentQuote}nextStep(){if(!this.isLeadFormStep()){let e=this.schema.steps[this.currentStepIndex],t=!1;this.fieldErrors={};for(let n of e.fields){if(!r(n.condition,this.formState))continue;let e=i(n,this.formState[n.id]);e.valid||(this.fieldErrors[n.id]=e.error||`Invalid value`,t=!0)}if(t)return this.render(),!1;let n=Date.now()-this.stepStartTime;if(p(this.schema.id,this.currentStepIndex,e.title,n),this.currentStepIndex<this.schema.steps.length-1)return this.currentStepIndex++,this.stepStartTime=Date.now(),this.callbacks.onStepChange&&this.callbacks.onStepChange(this.currentStepIndex,this.schema.steps[this.currentStepIndex]),this.render(),!0;if(this.isLeadFormEnabled())return this.currentStepIndex++,this.stepStartTime=Date.now(),this.render(),!0}return!1}prevStep(){this.currentStepIndex>0&&(this.currentStepIndex--,this.stepStartTime=Date.now(),this.callbacks.onStepChange&&this.currentStepIndex<this.schema.steps.length&&this.callbacks.onStepChange(this.currentStepIndex,this.schema.steps[this.currentStepIndex]),this.render())}isLeadFormEnabled(){return this.schema.leadForm?.enabled!==!1}isLeadFormStep(){return this.isLeadFormEnabled()&&this.currentStepIndex===this.schema.steps.length}getTotalStepsCount(){return this.schema.steps.length+ +!!this.isLeadFormEnabled()}async submitLead(e){let t=this.schema.leadForm;this.fieldErrors={},(!e.name||String(e.name).trim()===``)&&(this.fieldErrors.lead_name=`Full Name is required.`);let r=String(e.email||``),i=r.indexOf(`@`),a=r.slice(i+1),o=a.lastIndexOf(`.`);if((!r||r.length>254||/\s/u.test(r)||i<=0||i!==r.lastIndexOf(`@`)||o<=0||o===a.length-1)&&(this.fieldErrors.lead_email=`A valid email address is required.`),t?.requirePhone&&(!e.phone||!/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone)))&&(this.fieldErrors.lead_phone=`Phone number is required.`),t?.requireAddress&&!e.address&&(this.fieldErrors.lead_address=`Street address or zip code is required.`),Object.keys(this.fieldErrors).length>0)return this.render(),null;this.isSubmitting=!0,this.render();let s=u({sourceLabel:this.sourceLabel}),c={quoteId:this.currentQuote.quoteId,schemaId:this.schema.id,schemaName:this.schema.name,quote:this.currentQuote,formState:{...this.formState},lead:{name:n(e.name),email:n(e.email),phone:n(e.phone||``),address:n(e.address||``),zipCode:n(e.zipCode||``),preferredDate:n(e.preferredDate||``),preferredTime:n(e.preferredTime||``),notes:n(e.notes||``)},attribution:s,submittedAt:new Date().toISOString(),metadata:this.schema.metadata};try{if(this.webhookUrl){let e=await T(this.webhookUrl,c);(e.status===`rejected`||e.status===`failed`)&&console.warn(`[NymrelQuote] Webhook delivery notice:`,e.message),c.delivery=e}else c.delivery=this.callbacks.onSubmit?w():C();if(this.callbacks.onSubmit)try{await this.callbacks.onSubmit(c)}catch(e){c.localHandlingFailed=!0,c.delivery?.channel===`callback`&&(c.delivery={...c.delivery,status:`failed`,ok:!1,message:`The page handler failed. No external delivery was attempted by the widget. Your quote is shown below.`});try{this.callbacks.onError?.(e)}catch{}}try{h(this.schema.id,c.quoteId,this.currentQuote.target,c.lead.email)}catch{}return this.isSubmitting=!1,this.isSubmitted=!0,this.lastSubmission=c,this.lastDeliveryReceipt=c.delivery??null,this.render(),c}catch(e){return this.isSubmitting=!1,this.callbacks.onError&&this.callbacks.onError(e),this.fieldErrors._global=`Submission failed. Please check your connection and try again.`,this.render(),null}}getLastDeliveryReceipt(){return this.lastDeliveryReceipt}reset(){this.formState={},this.schema.steps.forEach(e=>{e.fields.forEach(e=>{e.defaultValue!==void 0&&(this.formState[e.id]=e.defaultValue)})}),this.currentStepIndex=0,this.isSubmitted=!1,this.isSubmitting=!1,this.lastSubmission=null,this.lastDeliveryReceipt=null,this.fieldErrors={},this.recalculate()}printReceipt(){typeof window<`u`&&window.print()}render(){let e=S(this.schema.theme),t=``;t=this.isSubmitted&&this.lastSubmission?this.renderSuccessScreen(this.lastSubmission):this.isLeadFormStep()?this.renderLeadFormStep():this.renderStepForm(this.schema.steps[this.currentStepIndex]);let n=this.showBreakdownModal?this.renderBreakdownModal():``,r=`
+  `}function w(e=new Date().toISOString()){return{status:`not_configured`,channel:`none`,attemptedAt:e,message:`Local capture only: no delivery destination is configured, so nothing was sent.`}}function T(e=new Date().toISOString()){return{status:`callback_only`,channel:`callback`,attemptedAt:e,message:`Captured locally and handed to this page. No external delivery was attempted.`}}async function E(e,t){let n=new Date().toISOString();try{let r=await fetch(e,{method:`POST`,headers:{"Content-Type":`application/json`,"X-Nymrel-Quote-Id":t.quoteId},body:JSON.stringify(t)});return r.ok?{status:`accepted`,channel:`webhook`,attemptedAt:n,httpStatus:r.status,ok:!0,message:`Your quote was accepted by the destination.`}:{status:`rejected`,channel:`webhook`,attemptedAt:n,httpStatus:r.status,ok:!1,message:`Delivery failed: the destination declined this quote (HTTP ${r.status}). Your quote is shown below for your records.`}}catch{return{status:`failed`,channel:`webhook`,attemptedAt:n,ok:!1,message:`Delivery failed: could not reach the destination. Your quote is shown below for your records.`}}}function D(e){return e?e.message:w().message}function O(e){return e==null?``:String(e).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`).replace(/'/g,`&#039;`)}var k=class{container;schema;callbacks;formState={};currentStepIndex=0;currentQuote;showBreakdownModal=!1;isSubmitted=!1;isSubmitting=!1;lastSubmission=null;lastDeliveryReceipt=null;sourceLabel;webhookUrl;fieldErrors={};stepStartTime=Date.now();constructor(e,t){this.schema=t.schema,this.callbacks=t.callbacks||{},this.sourceLabel=t.sourceLabel||this.schema.sourceLabel,this.webhookUrl=t.webhookUrl||this.schema.webhookUrl,this.schema.steps.forEach(e=>{e.fields.forEach(e=>{e.defaultValue!==void 0&&(this.formState[e.id]=e.defaultValue)})}),t.initialState&&(this.formState={...this.formState,...t.initialState}),this.container=t.useShadowDom!==!1&&e.attachShadow?e.shadowRoot?e.shadowRoot:e.attachShadow({mode:`open`}):e,this.currentQuote=s(this.schema,this.formState),p(this.schema.id,{sourceLabel:this.sourceLabel}),this.render()}updateState(e,t){this.formState[e]=n(t),delete this.fieldErrors[e],this.recalculate()}recalculate(){return this.currentQuote=s(this.schema,this.formState),h(this.schema.id,this.currentQuote.target,this.currentQuote.min,this.currentQuote.max,this.currentQuote.quoteId),this.callbacks.onCalculate&&this.callbacks.onCalculate(this.currentQuote,this.formState),this.render(),this.currentQuote}nextStep(){if(!this.isLeadFormStep()){let e=this.schema.steps[this.currentStepIndex],t=!1;this.fieldErrors={};for(let n of e.fields){if(!r(n.condition,this.formState))continue;let e=a(n,this.formState[n.id]);e.valid||(this.fieldErrors[n.id]=e.error||`Invalid value`,t=!0)}if(t)return this.render(),!1;let n=Date.now()-this.stepStartTime;if(m(this.schema.id,this.currentStepIndex,e.title,n),this.currentStepIndex<this.schema.steps.length-1)return this.currentStepIndex++,this.stepStartTime=Date.now(),this.callbacks.onStepChange&&this.callbacks.onStepChange(this.currentStepIndex,this.schema.steps[this.currentStepIndex]),this.render(),!0;if(this.isLeadFormEnabled())return this.currentStepIndex++,this.stepStartTime=Date.now(),this.render(),!0}return!1}prevStep(){this.currentStepIndex>0&&(this.currentStepIndex--,this.stepStartTime=Date.now(),this.callbacks.onStepChange&&this.currentStepIndex<this.schema.steps.length&&this.callbacks.onStepChange(this.currentStepIndex,this.schema.steps[this.currentStepIndex]),this.render())}isLeadFormEnabled(){return this.schema.leadForm?.enabled!==!1}isLeadFormStep(){return this.isLeadFormEnabled()&&this.currentStepIndex===this.schema.steps.length}getTotalStepsCount(){return this.schema.steps.length+ +!!this.isLeadFormEnabled()}async submitLead(e){let t=this.schema.leadForm;if(this.fieldErrors={},(!e.name||String(e.name).trim()===``)&&(this.fieldErrors.lead_name=`Full Name is required.`),i(e.email)||(this.fieldErrors.lead_email=`A valid email address is required.`),t?.requirePhone&&(!e.phone||!/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone)))&&(this.fieldErrors.lead_phone=`Phone number is required.`),t?.requireAddress&&!e.address&&(this.fieldErrors.lead_address=`Street address or zip code is required.`),Object.keys(this.fieldErrors).length>0)return this.render(),null;this.isSubmitting=!0,this.render();let r=d({sourceLabel:this.sourceLabel}),a={quoteId:this.currentQuote.quoteId,schemaId:this.schema.id,schemaName:this.schema.name,quote:this.currentQuote,formState:{...this.formState},lead:{name:n(e.name),email:n(e.email),phone:n(e.phone||``),address:n(e.address||``),zipCode:n(e.zipCode||``),preferredDate:n(e.preferredDate||``),preferredTime:n(e.preferredTime||``),notes:n(e.notes||``)},attribution:r,submittedAt:new Date().toISOString(),metadata:this.schema.metadata};try{if(this.webhookUrl){let e=await E(this.webhookUrl,a);(e.status===`rejected`||e.status===`failed`)&&console.warn(`[NymrelQuote] Webhook delivery notice:`,e.message),a.delivery=e}else a.delivery=this.callbacks.onSubmit?T():w();if(this.callbacks.onSubmit)try{await this.callbacks.onSubmit(a)}catch(e){a.localHandlingFailed=!0,a.delivery?.channel===`callback`&&(a.delivery={...a.delivery,status:`failed`,ok:!1,message:`The page handler failed. No external delivery was attempted by the widget. Your quote is shown below.`});try{this.callbacks.onError?.(e)}catch{}}try{g(this.schema.id,a.quoteId,this.currentQuote.target,a.lead.email)}catch{}return this.isSubmitting=!1,this.isSubmitted=!0,this.lastSubmission=a,this.lastDeliveryReceipt=a.delivery??null,this.render(),a}catch(e){return this.isSubmitting=!1,this.callbacks.onError&&this.callbacks.onError(e),this.fieldErrors._global=`Submission failed. Please check your connection and try again.`,this.render(),null}}getLastDeliveryReceipt(){return this.lastDeliveryReceipt}reset(){this.formState={},this.schema.steps.forEach(e=>{e.fields.forEach(e=>{e.defaultValue!==void 0&&(this.formState[e.id]=e.defaultValue)})}),this.currentStepIndex=0,this.isSubmitted=!1,this.isSubmitting=!1,this.lastSubmission=null,this.lastDeliveryReceipt=null,this.fieldErrors={},this.recalculate()}printReceipt(){typeof window<`u`&&window.print()}render(){let e=C(this.schema.theme),t=``;t=this.isSubmitted&&this.lastSubmission?this.renderSuccessScreen(this.lastSubmission):this.isLeadFormStep()?this.renderLeadFormStep():this.renderStepForm(this.schema.steps[this.currentStepIndex]);let n=this.showBreakdownModal?this.renderBreakdownModal():``,r=`
       <style>${e}</style>
-      <div class="nym-container" role="region" aria-label="${D(this.schema.name)}">
+      <div class="nym-container" role="region" aria-label="${O(this.schema.name)}">
         <!-- Header -->
         <header class="nym-header">
           <div class="nym-header-content">
-            <h2>${D(this.schema.name)}</h2>
-            ${this.schema.description?`<p>${D(this.schema.description)}</p>`:``}
+            <h2>${O(this.schema.name)}</h2>
+            ${this.schema.description?`<p>${O(this.schema.description)}</p>`:``}
           </div>
-          ${this.schema.badge?`<span class="nym-badge">${D(this.schema.badge)}</span>`:``}
+          ${this.schema.badge?`<span class="nym-badge">${O(this.schema.badge)}</span>`:``}
         </header>
 
         <!-- Live Reactive Range Banner -->
@@ -764,11 +764,11 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
           <div class="nym-range-info">
             <span class="nym-range-label">Instant Estimated Range</span>
             <div class="nym-range-values">
-              <span class="nym-range-amount">${D(this.currentQuote.formattedMin)}</span>
+              <span class="nym-range-amount">${O(this.currentQuote.formattedMin)}</span>
               <span class="nym-range-separator">&ndash;</span>
-              <span class="nym-range-amount">${D(this.currentQuote.formattedMax)}</span>
+              <span class="nym-range-amount">${O(this.currentQuote.formattedMax)}</span>
             </div>
-            <span class="nym-range-target">Baseline Target: <strong>${D(this.currentQuote.formattedTarget)}</strong></span>
+            <span class="nym-range-target">Baseline Target: <strong>${O(this.currentQuote.formattedTarget)}</strong></span>
           </div>
           <button type="button" class="nym-btn-breakdown" id="nym-toggle-breakdown" aria-label="View cost breakdown">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
@@ -782,7 +782,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
         </div>
         <div class="nym-step-legend">
           <span>Step ${this.currentStepIndex+1} of ${this.getTotalStepsCount()}</span>
-          <span>${this.isLeadFormStep()?`Lead Contact & Booking`:D(this.schema.steps[this.currentStepIndex]?.title||``)}</span>
+          <span>${this.isLeadFormStep()?`Lead Contact & Booking`:O(this.schema.steps[this.currentStepIndex]?.title||``)}</span>
         </div>
 
         <!-- Main Step Form Content -->
@@ -794,7 +794,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
             ${this.currentQuote.recommendations.map(e=>`
               <div class="nym-recommendation-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>${D(e)}</span>
+                <span>${O(e)}</span>
               </div>
             `).join(``)}
           </div>
@@ -814,8 +814,8 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
       </div>
     `;this.container.innerHTML=r,this.attachEventListeners()}renderStepForm(e){let t=this.currentStepIndex===0;return`
       <div class="nym-step-view">
-        <h3 class="nym-step-title">${D(e.title)}</h3>
-        ${e.subtitle?`<p class="nym-step-subtitle">${D(e.subtitle)}</p>`:``}
+        <h3 class="nym-step-title">${O(e.title)}</h3>
+        ${e.subtitle?`<p class="nym-step-subtitle">${O(e.subtitle)}</p>`:``}
 
         <div class="nym-fields-list">
           ${e.fields.map(e=>this.renderField(e)).join(``)}
@@ -847,33 +847,33 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
               max="${r}"
               step="${a}"
               value="${o}"
-              aria-label="${D(e.label)}"
+              aria-label="${O(e.label)}"
             />
           </div>
         `;break}case`select`:i=`
-          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${D(e.label)}">
+          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${O(e.label)}">
             ${e.options?.map(e=>`
-              <option value="${D(e.id)}" ${String(t)===String(e.id)?`selected`:``}>
-                ${D(e.label)} ${e.adder?`(+${this.currentQuote.currencySymbol}${e.adder})`:``} ${e.multiplier?`(${e.multiplier}x)`:``}
+              <option value="${O(e.id)}" ${String(t)===String(e.id)?`selected`:``}>
+                ${O(e.label)} ${e.adder?`(+${this.currentQuote.currencySymbol}${e.adder})`:``} ${e.multiplier?`(${e.multiplier}x)`:``}
               </option>
             `).join(``)}
           </select>
         `;break;case`radio`:i=`
-          <div class="nym-options-grid" role="radiogroup" aria-label="${D(e.label)}">
+          <div class="nym-options-grid" role="radiogroup" aria-label="${O(e.label)}">
             ${e.options?.map(n=>{let r=String(t)===String(n.id);return`
                 <div
                   class="nym-option-card ${r?`selected`:``}"
                   data-field-id="${e.id}"
-                  data-option-id="${D(n.id)}"
+                  data-option-id="${O(n.id)}"
                   role="radio"
                   aria-checked="${r}"
                   tabindex="0"
                 >
                   <div class="nym-option-header">
-                    <span class="nym-option-title">${D(n.label)}</span>
-                    ${n.badge?`<span class="nym-option-badge">${D(n.badge)}</span>`:``}
+                    <span class="nym-option-title">${O(n.label)}</span>
+                    ${n.badge?`<span class="nym-option-badge">${O(n.badge)}</span>`:``}
                   </div>
-                  ${n.description?`<p class="nym-option-desc">${D(n.description)}</p>`:``}
+                  ${n.description?`<p class="nym-option-desc">${O(n.description)}</p>`:``}
                   ${n.adder||n.multiplier?`
                     <div class="nym-option-price">
                       ${n.adder?`+${this.currentQuote.currencySymbol}${n.adder}`:``}
@@ -889,7 +889,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
                 <div
                   class="nym-checkbox-item ${r?`checked`:``}"
                   data-field-id="${e.id}"
-                  data-checkbox-id="${D(t.id)}"
+                  data-checkbox-id="${O(t.id)}"
                   role="checkbox"
                   aria-checked="${r}"
                   tabindex="0"
@@ -899,10 +899,10 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
                   </div>
                   <div class="nym-checkbox-info">
                     <div class="nym-checkbox-title">
-                      <span>${D(t.label)}</span>
+                      <span>${O(t.label)}</span>
                       ${t.adder?`<span>+${this.currentQuote.currencySymbol}${t.adder}</span>`:``}
                     </div>
-                    ${t.description?`<div class="nym-checkbox-desc">${D(t.description)}</div>`:``}
+                    ${t.description?`<div class="nym-checkbox-desc">${O(t.description)}</div>`:``}
                   </div>
                 </div>
               `}).join(``)}
@@ -915,64 +915,64 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
             min="${e.min??0}"
             max="${e.max??999999}"
             step="${e.step??1}"
-            value="${D(t)}"
-            placeholder="${e.placeholder?D(e.placeholder):``}"
-            aria-label="${D(e.label)}"
+            value="${O(t)}"
+            placeholder="${e.placeholder?O(e.placeholder):``}"
+            aria-label="${O(e.label)}"
           />
         `;break;default:i=`
           <input
             type="text"
             class="nym-input nym-reactive-input"
             data-field-id="${e.id}"
-            value="${D(t)}"
-            placeholder="${e.placeholder?D(e.placeholder):``}"
-            aria-label="${D(e.label)}"
+            value="${O(t)}"
+            placeholder="${e.placeholder?O(e.placeholder):``}"
+            aria-label="${O(e.label)}"
           />
         `}return`
       <div class="nym-field-group">
         <label class="nym-label">
-          <span>${D(e.label)}${e.required?` *`:``}</span>
-          ${e.unit&&e.type!==`slider`?`<span class="nym-helper-text">${D(e.unit)}</span>`:``}
+          <span>${O(e.label)}${e.required?` *`:``}</span>
+          ${e.unit&&e.type!==`slider`?`<span class="nym-helper-text">${O(e.unit)}</span>`:``}
         </label>
         ${i}
-        ${e.helperText?`<div class="nym-helper-text">${D(e.helperText)}</div>`:``}
-        ${n?`<div class="nym-error-text">${D(n)}</div>`:``}
+        ${e.helperText?`<div class="nym-helper-text">${O(e.helperText)}</div>`:``}
+        ${n?`<div class="nym-error-text">${O(n)}</div>`:``}
       </div>
     `}renderLeadFormStep(){let e=this.schema.leadForm,t=this.fieldErrors._global;return`
       <div class="nym-lead-step">
-        <h3 class="nym-step-title">${D(e?.title||`Lock in Your Official Quote`)}</h3>
-        <p class="nym-step-subtitle">${D(e?.subtitle||`Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.`)}</p>
+        <h3 class="nym-step-title">${O(e?.title||`Lock in Your Official Quote`)}</h3>
+        <p class="nym-step-subtitle">${O(e?.subtitle||`Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.`)}</p>
 
-        ${t?`<div class="nym-error-text" style="margin-bottom: 16px;">${D(t)}</div>`:``}
+        ${t?`<div class="nym-error-text" style="margin-bottom: 16px;">${O(t)}</div>`:``}
 
         <form id="nym-lead-form">
           <div class="nym-field-group">
             <label class="nym-label">Full Name *</label>
-            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${D(this.formState._lead_name||``)}" />
-            ${this.fieldErrors.lead_name?`<div class="nym-error-text">${D(this.fieldErrors.lead_name)}</div>`:``}
+            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${O(this.formState._lead_name||``)}" />
+            ${this.fieldErrors.lead_name?`<div class="nym-error-text">${O(this.fieldErrors.lead_name)}</div>`:``}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Email Address *</label>
-            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${D(this.formState._lead_email||``)}" />
-            ${this.fieldErrors.lead_email?`<div class="nym-error-text">${D(this.fieldErrors.lead_email)}</div>`:``}
+            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${O(this.formState._lead_email||``)}" />
+            ${this.fieldErrors.lead_email?`<div class="nym-error-text">${O(this.fieldErrors.lead_email)}</div>`:``}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Phone Number ${e?.requirePhone?`*`:`(Optional)`}</label>
-            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone?`required`:``} placeholder="(555) 019-2834" value="${D(this.formState._lead_phone||``)}" />
-            ${this.fieldErrors.lead_phone?`<div class="nym-error-text">${D(this.fieldErrors.lead_phone)}</div>`:``}
+            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone?`required`:``} placeholder="(555) 019-2834" value="${O(this.formState._lead_phone||``)}" />
+            ${this.fieldErrors.lead_phone?`<div class="nym-error-text">${O(this.fieldErrors.lead_phone)}</div>`:``}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="nym-field-group">
               <label class="nym-label">Street Address ${e?.requireAddress?`*`:``}</label>
-              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${D(this.formState._lead_address||``)}" />
-              ${this.fieldErrors.lead_address?`<div class="nym-error-text">${D(this.fieldErrors.lead_address)}</div>`:``}
+              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${O(this.formState._lead_address||``)}" />
+              ${this.fieldErrors.lead_address?`<div class="nym-error-text">${O(this.fieldErrors.lead_address)}</div>`:``}
             </div>
             <div class="nym-field-group">
               <label class="nym-label">Zip Code</label>
-              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${D(this.formState._lead_zip||``)}" />
+              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${O(this.formState._lead_zip||``)}" />
             </div>
           </div>
 
@@ -980,7 +980,7 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Date</label>
-                <input type="date" name="preferredDate" class="nym-input" value="${D(this.formState._lead_date||``)}" />
+                <input type="date" name="preferredDate" class="nym-input" value="${O(this.formState._lead_date||``)}" />
               </div>
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Window</label>
@@ -996,12 +996,12 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
           ${e?.collectNotes===!1?``:`
             <div class="nym-field-group">
               <label class="nym-label">Project Notes or Questions</label>
-              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${D(this.formState._lead_notes||``)}</textarea>
+              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${O(this.formState._lead_notes||``)}</textarea>
             </div>
           `}
 
           <div class="nym-helper-text" style="margin-bottom: 20px;">
-            ${D(e?.disclaimerText||`By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.`)}
+            ${O(e?.disclaimerText||`By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.`)}
           </div>
 
           <div class="nym-footer">
@@ -1017,37 +1017,37 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
     `}renderSuccessScreen(e){let t=this.schema.leadForm,n=e.delivery?.status===`accepted`&&!e.localHandlingFailed;return`
       <div class="nym-success-screen">
         <div class="nym-success-icon">✓</div>
-        <h3 class="nym-step-title">${D(n&&t?.successTitle||`Estimate Captured Successfully!`)}</h3>
-        <p class="nym-step-subtitle">${D(n&&t?.successMessage||`Your quote summary is below. Print or save a copy for your records.`)}</p>
+        <h3 class="nym-step-title">${O(n&&t?.successTitle||`Estimate Captured Successfully!`)}</h3>
+        <p class="nym-step-subtitle">${O(n&&t?.successMessage||`Your quote summary is below. Print or save a copy for your records.`)}</p>
         ${e.localHandlingFailed?`<p role="alert">The page handler failed after capture. The delivery status below records the observed outcome.</p>`:``}
 
         <div class="nym-receipt-card">
           <div class="nym-delivery-status nym-receipt-row" role="status">
             <span class="nym-receipt-key">Delivery Status:</span>
-            <span class="nym-receipt-val">${D(E(this.lastDeliveryReceipt))}</span>
+            <span class="nym-receipt-val">${O(D(this.lastDeliveryReceipt))}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Quote Reference ID:</span>
-            <span class="nym-receipt-val" style="font-family: monospace;">${D(e.quoteId)}</span>
+            <span class="nym-receipt-val" style="font-family: monospace;">${O(e.quoteId)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Estimated Price Range:</span>
             <span class="nym-receipt-val" style="color: var(--nym-accent); font-size: 1.05rem;">
-              ${D(e.quote.formattedMin)} &ndash; ${D(e.quote.formattedMax)}
+              ${O(e.quote.formattedMin)} &ndash; ${O(e.quote.formattedMax)}
             </span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Baseline Target:</span>
-            <span class="nym-receipt-val">${D(e.quote.formattedTarget)}</span>
+            <span class="nym-receipt-val">${O(e.quote.formattedTarget)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Recipient:</span>
-            <span class="nym-receipt-val">${D(e.lead.name)} (${D(e.lead.email)})</span>
+            <span class="nym-receipt-val">${O(e.lead.name)} (${O(e.lead.email)})</span>
           </div>
           ${e.lead.preferredDate?`
             <div class="nym-receipt-row">
               <span class="nym-receipt-key">Requested Consultation:</span>
-              <span class="nym-receipt-val">${D(e.lead.preferredDate)} (${D(e.lead.preferredTime||`Anytime`)})</span>
+              <span class="nym-receipt-val">${O(e.lead.preferredDate)} (${O(e.lead.preferredTime||`Anytime`)})</span>
             </div>
           `:``}
         </div>
@@ -1075,23 +1075,23 @@ function e(e=`NYM`){let t=new Date;return`${e}-${t.getFullYear()}${String(t.getM
                 ${this.currentQuote.breakdown.map(e=>`
                   <tr>
                     <td>
-                      <div class="nym-breakdown-label">${D(e.label)}</div>
-                      ${e.description?`<div class="nym-breakdown-subtext">${D(e.description)}</div>`:``}
+                      <div class="nym-breakdown-label">${O(e.label)}</div>
+                      ${e.description?`<div class="nym-breakdown-subtext">${O(e.description)}</div>`:``}
                     </td>
-                    <td class="nym-breakdown-val">${D(e.formattedAmount)}</td>
+                    <td class="nym-breakdown-val">${O(e.formattedAmount)}</td>
                   </tr>
                 `).join(``)}
                 <tr class="nym-breakdown-total">
                   <td><strong>Estimated Baseline Target</strong></td>
-                  <td class="nym-breakdown-val">${D(this.currentQuote.formattedTarget)}</td>
+                  <td class="nym-breakdown-val">${O(this.currentQuote.formattedTarget)}</td>
                 </tr>
                 <tr>
                   <td><strong>Dynamic Estimated Range</strong></td>
-                  <td class="nym-breakdown-val">${D(this.currentQuote.formattedMin)} &ndash; ${D(this.currentQuote.formattedMax)}</td>
+                  <td class="nym-breakdown-val">${O(this.currentQuote.formattedMin)} &ndash; ${O(this.currentQuote.formattedMax)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    `}attachEventListeners(){this.container.querySelectorAll(`.nym-reactive-input`).forEach(e=>{e.addEventListener(`input`,e=>{let t=e.target,n=t.getAttribute(`data-field-id`);if(n){this.updateState(n,t.value);let e=this.container.querySelector(`#val-${n}`);e&&(e.textContent=`${t.value} ${t.getAttribute(`data-unit`)||``}`.trim())}})}),this.container.querySelectorAll(`.nym-option-card`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-field-id`),n=e.getAttribute(`data-option-id`);t&&n&&this.updateState(t,n)})}),this.container.querySelectorAll(`.nym-checkbox-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-field-id`),n=e.getAttribute(`data-checkbox-id`);if(t&&n){let e=Array.isArray(this.formState[t])?[...this.formState[t]]:[],r=e.indexOf(n);r>=0?e.splice(r,1):e.push(n),this.updateState(t,e)}})});let e=this.container.querySelector(`#nym-btn-next`);e&&e.addEventListener(`click`,()=>this.nextStep());let t=this.container.querySelector(`#nym-btn-prev`);t&&t.addEventListener(`click`,()=>this.prevStep());let n=this.container.querySelector(`#nym-lead-form`);n&&n.addEventListener(`submit`,e=>{e.preventDefault();let t=new FormData(n),r={};t.forEach((e,t)=>{r[t]=e}),this.submitLead(r)});let r=this.container.querySelector(`#nym-toggle-breakdown`);r&&r.addEventListener(`click`,()=>{this.showBreakdownModal=!0,this.render()});let i=this.container.querySelector(`#nym-modal-close`);i&&i.addEventListener(`click`,()=>{this.showBreakdownModal=!1,this.render()});let a=this.container.querySelector(`#nym-modal-backdrop`);a&&a.addEventListener(`click`,e=>{e.target===a&&(this.showBreakdownModal=!1,this.render())});let o=this.container.querySelector(`#nym-btn-print`);o&&o.addEventListener(`click`,()=>this.printReceipt());let s=this.container.querySelector(`#nym-btn-restart`);s&&s.addEventListener(`click`,()=>this.reset())}};function k(e,t){let n=typeof e==`string`?document.querySelector(e):e;if(!n)throw Error(`[NymrelQuote] Container element not found: ${e}`);return new O(n,t)}Object.defineProperty(exports,"C",{enumerable:!0,get:function(){return t}}),Object.defineProperty(exports,"E",{enumerable:!0,get:function(){return i}}),Object.defineProperty(exports,"S",{enumerable:!0,get:function(){return r}}),Object.defineProperty(exports,"T",{enumerable:!0,get:function(){return n}}),Object.defineProperty(exports,"_",{enumerable:!0,get:function(){return m}}),Object.defineProperty(exports,"a",{enumerable:!0,get:function(){return y}}),Object.defineProperty(exports,"b",{enumerable:!0,get:function(){return a}}),Object.defineProperty(exports,"c",{enumerable:!0,get:function(){return x}}),Object.defineProperty(exports,"d",{enumerable:!0,get:function(){return d}}),Object.defineProperty(exports,"f",{enumerable:!0,get:function(){return u}}),Object.defineProperty(exports,"g",{enumerable:!0,get:function(){return h}}),Object.defineProperty(exports,"h",{enumerable:!0,get:function(){return g}}),Object.defineProperty(exports,"i",{enumerable:!0,get:function(){return T}}),Object.defineProperty(exports,"l",{enumerable:!0,get:function(){return S}}),Object.defineProperty(exports,"m",{enumerable:!0,get:function(){return l}}),Object.defineProperty(exports,"n",{enumerable:!0,get:function(){return k}}),Object.defineProperty(exports,"o",{enumerable:!0,get:function(){return _}}),Object.defineProperty(exports,"p",{enumerable:!0,get:function(){return c}}),Object.defineProperty(exports,"r",{enumerable:!0,get:function(){return w}}),Object.defineProperty(exports,"s",{enumerable:!0,get:function(){return v}}),Object.defineProperty(exports,"t",{enumerable:!0,get:function(){return O}}),Object.defineProperty(exports,"u",{enumerable:!0,get:function(){return b}}),Object.defineProperty(exports,"v",{enumerable:!0,get:function(){return f}}),Object.defineProperty(exports,"w",{enumerable:!0,get:function(){return e}}),Object.defineProperty(exports,"x",{enumerable:!0,get:function(){return o}}),Object.defineProperty(exports,"y",{enumerable:!0,get:function(){return p}});
+    `}attachEventListeners(){this.container.querySelectorAll(`.nym-reactive-input`).forEach(e=>{e.addEventListener(`input`,e=>{let t=e.target,n=t.getAttribute(`data-field-id`);if(n){this.updateState(n,t.value);let e=this.container.querySelector(`#val-${n}`);e&&(e.textContent=`${t.value} ${t.getAttribute(`data-unit`)||``}`.trim())}})}),this.container.querySelectorAll(`.nym-option-card`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-field-id`),n=e.getAttribute(`data-option-id`);t&&n&&this.updateState(t,n)})}),this.container.querySelectorAll(`.nym-checkbox-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-field-id`),n=e.getAttribute(`data-checkbox-id`);if(t&&n){let e=Array.isArray(this.formState[t])?[...this.formState[t]]:[],r=e.indexOf(n);r>=0?e.splice(r,1):e.push(n),this.updateState(t,e)}})});let e=this.container.querySelector(`#nym-btn-next`);e&&e.addEventListener(`click`,()=>this.nextStep());let t=this.container.querySelector(`#nym-btn-prev`);t&&t.addEventListener(`click`,()=>this.prevStep());let n=this.container.querySelector(`#nym-lead-form`);n&&n.addEventListener(`submit`,e=>{e.preventDefault();let t=new FormData(n),r={};t.forEach((e,t)=>{r[t]=e}),this.submitLead(r)});let r=this.container.querySelector(`#nym-toggle-breakdown`);r&&r.addEventListener(`click`,()=>{this.showBreakdownModal=!0,this.render()});let i=this.container.querySelector(`#nym-modal-close`);i&&i.addEventListener(`click`,()=>{this.showBreakdownModal=!1,this.render()});let a=this.container.querySelector(`#nym-modal-backdrop`);a&&a.addEventListener(`click`,e=>{e.target===a&&(this.showBreakdownModal=!1,this.render())});let o=this.container.querySelector(`#nym-btn-print`);o&&o.addEventListener(`click`,()=>this.printReceipt());let s=this.container.querySelector(`#nym-btn-restart`);s&&s.addEventListener(`click`,()=>this.reset())}};function A(e,t){let n=typeof e==`string`?document.querySelector(e):e;if(!n)throw Error(`[NymrelQuote] Container element not found: ${e}`);return new k(n,t)}Object.defineProperty(exports,"C",{enumerable:!0,get:function(){return t}}),Object.defineProperty(exports,"D",{enumerable:!0,get:function(){return a}}),Object.defineProperty(exports,"E",{enumerable:!0,get:function(){return n}}),Object.defineProperty(exports,"S",{enumerable:!0,get:function(){return r}}),Object.defineProperty(exports,"T",{enumerable:!0,get:function(){return i}}),Object.defineProperty(exports,"_",{enumerable:!0,get:function(){return h}}),Object.defineProperty(exports,"a",{enumerable:!0,get:function(){return b}}),Object.defineProperty(exports,"b",{enumerable:!0,get:function(){return o}}),Object.defineProperty(exports,"c",{enumerable:!0,get:function(){return S}}),Object.defineProperty(exports,"d",{enumerable:!0,get:function(){return f}}),Object.defineProperty(exports,"f",{enumerable:!0,get:function(){return d}}),Object.defineProperty(exports,"g",{enumerable:!0,get:function(){return g}}),Object.defineProperty(exports,"h",{enumerable:!0,get:function(){return _}}),Object.defineProperty(exports,"i",{enumerable:!0,get:function(){return E}}),Object.defineProperty(exports,"l",{enumerable:!0,get:function(){return C}}),Object.defineProperty(exports,"m",{enumerable:!0,get:function(){return u}}),Object.defineProperty(exports,"n",{enumerable:!0,get:function(){return A}}),Object.defineProperty(exports,"o",{enumerable:!0,get:function(){return v}}),Object.defineProperty(exports,"p",{enumerable:!0,get:function(){return l}}),Object.defineProperty(exports,"r",{enumerable:!0,get:function(){return T}}),Object.defineProperty(exports,"s",{enumerable:!0,get:function(){return y}}),Object.defineProperty(exports,"t",{enumerable:!0,get:function(){return k}}),Object.defineProperty(exports,"u",{enumerable:!0,get:function(){return x}}),Object.defineProperty(exports,"v",{enumerable:!0,get:function(){return p}}),Object.defineProperty(exports,"w",{enumerable:!0,get:function(){return e}}),Object.defineProperty(exports,"x",{enumerable:!0,get:function(){return s}}),Object.defineProperty(exports,"y",{enumerable:!0,get:function(){return m}});
