@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
   // Standard library build (ESM + CJS) + Preview app
   return {
     build: {
+      emptyOutDir: true,
       target: 'es2022',
       lib: {
         entry: {

@@ -1,29 +1,66 @@
 //#region src/core/engine.ts
-function e(e = "NYM") {
+function e(e, t) {
+	if (e == null || e === "" || typeof e == "boolean") throw RangeError(`${t} must be a finite number.`);
+	let n;
+	try {
+		n = Number(e);
+	} catch {
+		throw RangeError(`${t} must be a finite number.`);
+	}
+	if (!Number.isFinite(n)) throw RangeError(`${t} must be a finite number.`);
+	return n;
+}
+function t(t, n) {
+	let r = e(t, n);
+	if (r < 0) throw RangeError(`${n} must be greater than or equal to zero.`);
+	return r;
+}
+function n(t, n) {
+	let r = e(t, n);
+	if (r <= 0) throw RangeError(`${n} must be greater than zero.`);
+	return r;
+}
+function r(e, n, r, i) {
+	if (t(e, `${i}.min`), t(n, `${i}.target`), t(r, `${i}.max`), e > n || n > r) throw RangeError(`${i} must satisfy 0 <= min <= target <= max.`);
+}
+function i(t, n) {
+	for (let r of t) e(r.amount, `${n} breakdown item "${r.id}" amount`);
+}
+function a(r) {
+	for (let i of r) {
+		let r = `Field "${i.id}"`;
+		if (i.min !== void 0 && e(i.min, `${r} min`), i.max !== void 0 && e(i.max, `${r} max`), i.step !== void 0 && n(i.step, `${r} step`), i.min !== void 0 && i.max !== void 0 && i.min > i.max) throw RangeError(`${r} must satisfy min <= max.`);
+		i.unitPrice !== void 0 && t(i.unitPrice, `${r} unitPrice`), i.multiplier !== void 0 && n(i.multiplier, `${r} multiplier`);
+		for (let t of i.options || []) {
+			let r = `Option "${i.id}.${t.id}"`;
+			t.adder !== void 0 && e(t.adder, `${r} adder`), t.multiplier !== void 0 && n(t.multiplier, `${r} multiplier`);
+		}
+	}
+}
+function o(e = "NYM") {
 	let t = /* @__PURE__ */ new Date();
 	return `${e}-${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, "0")}${String(t.getDate()).padStart(2, "0")}-${Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(6)), (e) => (e % 36).toString(36)).join("").toUpperCase()}`;
 }
-function t(e, t = "USD", n = "$", r = 0) {
-	if (isNaN(e) || e == null) return `${n}0`;
-	let i = (r > 0 ? e.toFixed(r) : Math.round(e).toString()).split(".");
-	return i[0] = i[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${n}${i.join(".")}`;
+function s(t, n = "USD", r = "$", i = 0) {
+	let a = e(t, "Currency amount"), o = (i > 0 ? a.toFixed(i) : Math.round(a).toString()).split(".");
+	return o[0] = o[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${r}${o.join(".")}`;
 }
-function n(e) {
-	if (e == null) return e;
-	if (typeof e == "string") {
-		let t = "", n = !1, r = !1;
-		for (let i = 0; i < e.length; i += 1) {
-			let a = e[i];
+function c(t) {
+	if (t == null) return t;
+	if (typeof t == "string") {
+		let e = "", n = !1, r = !1;
+		for (let i = 0; i < t.length; i += 1) {
+			let a = t[i];
 			if (a === "<") {
-				let t = e.slice(i, i + 7).toLowerCase() === "<script", a = e.slice(i, i + 8).toLowerCase() === "<\/script", o = e[i + (a ? 8 : 7)];
-				(t || a) && (o === ">" || /\s/u.test(o || "")) && (r = t), n = !0;
-			} else a === ">" ? n = !1 : !n && !r && (t += a);
+				let e = t.slice(i, i + 7).toLowerCase() === "<script", a = t.slice(i, i + 8).toLowerCase() === "<\/script", o = t[i + (a ? 8 : 7)];
+				(e || a) && (o === ">" || /\s/u.test(o || "")) && (r = e), n = !0;
+			} else a === ">" ? n = !1 : !n && !r && (e += a);
 		}
-		return t.trim();
+		return e.trim();
 	}
-	return typeof e == "number" ? isNaN(e) ? 0 : e : Array.isArray(e) ? e.map(n) : e;
+	return typeof t == "number" ? e(t, "Numeric input") : Array.isArray(t) ? t.map(c) : t;
 }
-function r(e, t) {
+function l(e, t) {
 	if (!e || !e.fieldId) return !0;
 	let n = t[e.fieldId];
 	switch (e.operator) {
@@ -36,24 +73,32 @@ function r(e, t) {
 		default: return !0;
 	}
 }
-function i(e) {
+function u(e) {
 	if (typeof e != "string") return !1;
 	let t = e;
 	if (!t || t.length > 254 || /\s/u.test(t)) return !1;
 	let n = t.indexOf("@"), r = t.slice(n + 1), i = r.lastIndexOf(".");
 	return n > 0 && n === t.lastIndexOf("@") && i > 0 && i < r.length - 1;
 }
-function a(e, t) {
+function d(e, t) {
 	if (e.required && (t == null || t === "" || Array.isArray(t) && t.length === 0)) return {
 		valid: !1,
 		error: `${e.label} is required.`
 	};
 	if (t != null && t !== "") {
 		if (e.type === "number" || e.type === "slider" || e.type === "stepper") {
-			let n = Number(t);
-			if (isNaN(n)) return {
+			let n;
+			try {
+				n = Number(t);
+			} catch {
+				return {
+					valid: !1,
+					error: `${e.label} must be a valid finite number.`
+				};
+			}
+			if (!Number.isFinite(n)) return {
 				valid: !1,
-				error: `${e.label} must be a valid number.`
+				error: `${e.label} must be a valid finite number.`
 			};
 			if (e.min !== void 0 && n < e.min) return {
 				valid: !1,
@@ -64,7 +109,7 @@ function a(e, t) {
 				error: `Maximum value is ${e.max} ${e.unit || ""}`.trim()
 			};
 		}
-		if (e.type === "email" && !i(t)) return {
+		if (e.type === "email" && !u(t)) return {
 			valid: !1,
 			error: "Please enter a valid email address."
 		};
@@ -78,165 +123,171 @@ function a(e, t) {
 	}
 	return { valid: !0 };
 }
-function o(e, t) {
-	if (!t || t === "none") return e;
-	switch (t) {
-		case "round": return Math.round(e);
-		case "ceil": return Math.ceil(e);
-		case "floor": return Math.floor(e);
-		case "nearest10": return Math.round(e / 10) * 10;
-		case "nearest50": return Math.round(e / 50) * 50;
-		case "nearest100": return Math.round(e / 100) * 100;
-		default: return e;
+function f(t, n) {
+	if (e(t, "Rounding amount"), !n || n === "none") return t;
+	switch (n) {
+		case "round": return Math.round(t);
+		case "ceil": return Math.ceil(t);
+		case "floor": return Math.floor(t);
+		case "nearest10": return Math.round(t / 10) * 10;
+		case "nearest50": return Math.round(t / 50) * 50;
+		case "nearest100": return Math.round(t / 100) * 100;
+		default: return t;
 	}
 }
-function s(n, i) {
-	let a = n.pricing?.currency || "USD", s = n.pricing?.currencySymbol || "$", c = n.pricing || {}, l = i._quoteId || e(), u = [];
-	if (n.steps.forEach((e) => {
+function p(c, u) {
+	let p = c.pricing?.currency || "USD", m = c.pricing?.currencySymbol || "$", h = c.pricing || {}, g = u._quoteId || o(), _ = [];
+	if (c.steps.forEach((e) => {
 		e.fields.forEach((e) => {
-			u.push(e);
+			_.push(e);
 		});
-	}), c.formula === "custom" && typeof c.customFormula == "function") {
-		let e = c.customFormula(i, u), n = o(e.target, c.rounding), r = o(e.min, c.rounding), d = o(e.max, c.rounding);
-		return {
-			min: r,
-			max: d,
+	}), a(_), h.formula === "custom" && typeof h.customFormula == "function") {
+		let e = h.customFormula(u, _);
+		r(e.min, e.target, e.max, "Custom quote result");
+		let t = e.breakdown || [];
+		i(t, "Custom quote result");
+		let n = f(e.target, h.rounding), a = f(e.min, h.rounding), o = f(e.max, h.rounding);
+		return r(a, n, o, "Custom quote result"), {
+			min: a,
+			max: o,
 			target: n,
-			formattedMin: t(r, a, s),
-			formattedMax: t(d, a, s),
-			formattedTarget: t(n, a, s),
-			currency: a,
-			currencySymbol: s,
-			breakdown: e.breakdown || [],
+			formattedMin: s(a, p, m),
+			formattedMax: s(o, p, m),
+			formattedTarget: s(n, p, m),
+			currency: p,
+			currencySymbol: m,
+			breakdown: t,
 			recommendations: [],
 			calculatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-			quoteId: l
+			quoteId: g
 		};
 	}
-	let d = Number(c.baseFee || c.baseCalloutFee || 0), f = 0, p = 0, m = 0, h = 1, g = [], _ = [];
-	d > 0 && g.push({
+	let v = h.baseFee === void 0 ? "pricing.baseCalloutFee" : "pricing.baseFee", y = t(h.baseFee ?? h.baseCalloutFee ?? 0, v), b = t(h.taxRate ?? 0, "pricing.taxRate"), x = t(h.marginPercent ?? 10, "pricing.marginPercent") / 100, S = t(h.minRangeSpreadPercent ?? x * 100, "pricing.minRangeSpreadPercent") / 100, C = t(h.maxRangeSpreadPercent ?? x * 100, "pricing.maxRangeSpreadPercent") / 100, w = 0, T = 0, E = 0, D = 1, O = [], k = [];
+	y > 0 && O.push({
 		id: "base-fee",
 		label: "Base Callout / Setup Fee",
-		amount: d,
-		formattedAmount: t(d, a, s),
+		amount: y,
+		formattedAmount: s(y, p, m),
 		type: "base",
 		description: "Standard initial mobilization and inspection base"
 	});
-	for (let e of u) {
-		if (!r(e.condition, i)) continue;
-		let n = i[e.id] === void 0 ? e.defaultValue : i[e.id];
-		if (n != null && n !== "") {
-			if (e.type === "number" || e.type === "slider" || e.type === "stepper") {
-				let r = Number(n);
-				if (!isNaN(r) && r > 0) {
-					if (e.unitPrice && e.unitPrice > 0) {
-						let n = r * e.unitPrice;
-						e.category === "material" ? f += n : p += n, g.push({
-							id: e.id,
-							label: `${e.label} (${r} ${e.unit || "units"} @ ${t(e.unitPrice, a, s)}/${e.unit || "unit"})`,
-							amount: n,
-							formattedAmount: t(n, a, s),
-							type: e.category === "material" ? "material" : "labor"
+	for (let r of _) {
+		if (!l(r.condition, u)) continue;
+		let i = u[r.id] === void 0 ? r.defaultValue : u[r.id];
+		if (i != null && i !== "") {
+			if (r.type === "number" || r.type === "slider" || r.type === "stepper") {
+				let a = t(i, `Field "${r.id}" value`), o = d(r, a);
+				if (!o.valid) throw RangeError(`Field "${r.id}" is invalid: ${o.error}`);
+				let c = r.unitPrice === void 0 ? void 0 : t(r.unitPrice, `Field "${r.id}" unitPrice`), l = r.multiplier === void 0 ? void 0 : n(r.multiplier, `Field "${r.id}" multiplier`);
+				if (a > 0) {
+					if (c !== void 0 && c > 0) {
+						let t = e(a * c, `Field "${r.id}" item cost`);
+						r.category === "material" ? w = e(w + t, "Material subtotal") : T = e(T + t, "Labor subtotal"), O.push({
+							id: r.id,
+							label: `${r.label} (${a} ${r.unit || "units"} @ ${s(c, p, m)}/${r.unit || "unit"})`,
+							amount: t,
+							formattedAmount: s(t, p, m),
+							type: r.category === "material" ? "material" : "labor"
 						});
 					}
-					e.multiplier && e.multiplier !== 1 && (h *= e.multiplier);
+					l !== void 0 && l !== 1 && (D = n(D * l, "Composite multiplier"));
 				}
 			}
-			if ((e.type === "select" || e.type === "radio" || e.type === "toggle") && e.options && e.options.length > 0) {
-				let r = e.options.find((e) => String(e.id) === String(n) || String(e.value) === String(n));
-				if (r) {
-					if (r.adder && Number(r.adder) !== 0) {
-						let n = Number(r.adder);
-						m += n, g.push({
-							id: `${e.id}-${r.id}`,
-							label: `${e.label}: ${r.label}`,
-							amount: n,
-							formattedAmount: t(n, a, s),
-							type: e.category === "material" ? "material" : "addon",
-							description: r.description
-						});
-					}
-					if (r.multiplier && Number(r.multiplier) !== 1) {
-						let t = Number(r.multiplier);
-						h *= t, g.push({
-							id: `${e.id}-${r.id}-mult`,
-							label: `${r.label} Factor (${t}x)`,
-							amount: 0,
-							formattedAmount: `${t}x`,
-							type: "multiplier",
-							description: r.description
-						});
-					}
+			if ((r.type === "select" || r.type === "radio" || r.type === "toggle") && r.options && r.options.length > 0) {
+				let t = r.options.find((e) => String(e.id) === String(i) || String(e.value) === String(i));
+				if (t) {
+					let i = t.adder === void 0 ? void 0 : e(t.adder, `Option "${r.id}.${t.id}" adder`);
+					i !== void 0 && i !== 0 && (E = e(E + i, "Add-on subtotal"), O.push({
+						id: `${r.id}-${t.id}`,
+						label: `${r.label}: ${t.label}`,
+						amount: i,
+						formattedAmount: s(i, p, m),
+						type: r.category === "material" ? "material" : "addon",
+						description: t.description
+					}));
+					let a = t.multiplier === void 0 ? void 0 : n(t.multiplier, `Option "${r.id}.${t.id}" multiplier`);
+					a !== void 0 && a !== 1 && (D = n(D * a, "Composite multiplier"), O.push({
+						id: `${r.id}-${t.id}-mult`,
+						label: `${t.label} Factor (${a}x)`,
+						amount: 0,
+						formattedAmount: `${a}x`,
+						type: "multiplier",
+						description: t.description
+					}));
 				}
 			}
-			if (e.type === "checkbox") {
-				if (Array.isArray(n) && e.options) for (let r of n) {
-					let n = e.options.find((e) => String(e.id) === String(r) || String(e.value) === String(r));
-					if (n) {
-						if (n.adder && Number(n.adder) !== 0) {
-							let r = Number(n.adder);
-							m += r, g.push({
-								id: `${e.id}-${n.id}`,
-								label: n.label,
-								amount: r,
-								formattedAmount: t(r, a, s),
-								type: "addon",
-								description: n.description
-							});
-						}
-						n.multiplier && Number(n.multiplier) !== 1 && (h *= Number(n.multiplier));
+			if (r.type === "checkbox") {
+				if (Array.isArray(i) && r.options) for (let t of i) {
+					let i = r.options.find((e) => String(e.id) === String(t) || String(e.value) === String(t));
+					if (i) {
+						let t = i.adder === void 0 ? void 0 : e(i.adder, `Option "${r.id}.${i.id}" adder`);
+						t !== void 0 && t !== 0 && (E = e(E + t, "Add-on subtotal"), O.push({
+							id: `${r.id}-${i.id}`,
+							label: i.label,
+							amount: t,
+							formattedAmount: s(t, p, m),
+							type: "addon",
+							description: i.description
+						}));
+						let a = i.multiplier === void 0 ? void 0 : n(i.multiplier, `Option "${r.id}.${i.id}" multiplier`);
+						a !== void 0 && a !== 1 && (D = n(D * a, "Composite multiplier"));
 					}
 				}
-				else typeof n == "boolean" && n === !0 && (e.unitPrice && (m += e.unitPrice, g.push({
-					id: e.id,
-					label: e.label,
-					amount: e.unitPrice,
-					formattedAmount: t(e.unitPrice, a, s),
-					type: "addon"
-				})), e.multiplier && e.multiplier !== 1 && (h *= e.multiplier));
+				else if (typeof i == "boolean" && i === !0) {
+					let i = r.unitPrice === void 0 ? void 0 : t(r.unitPrice, `Field "${r.id}" unitPrice`);
+					i !== void 0 && i !== 0 && (E = e(E + i, "Add-on subtotal"), O.push({
+						id: r.id,
+						label: r.label,
+						amount: i,
+						formattedAmount: s(i, p, m),
+						type: "addon"
+					}));
+					let a = r.multiplier === void 0 ? void 0 : n(r.multiplier, `Field "${r.id}" multiplier`);
+					a !== void 0 && a !== 1 && (D = n(D * a, "Composite multiplier"));
+				}
 			}
 		}
 	}
-	let v = d + f + p + m, y = v * h;
-	if (c.taxRate && c.taxRate > 0) {
-		let e = y * c.taxRate;
-		g.push({
+	let A = e(y + w + T + E, "Quote subtotal"), j = e(A * D, "Multiplied quote target");
+	if (b > 0) {
+		let t = e(j * b, "Tax amount");
+		O.push({
 			id: "tax",
-			label: `Estimated Tax (${(c.taxRate * 100).toFixed(1)}%)`,
-			amount: e,
-			formattedAmount: t(e, a, s),
+			label: `Estimated Tax (${(b * 100).toFixed(1)}%)`,
+			amount: t,
+			formattedAmount: s(t, p, m),
 			type: "tax"
-		}), y += e;
+		}), j = e(j + t, "Taxed quote target");
 	}
-	let b = c.marginPercent ? c.marginPercent / 100 : .1, x = c.minRangeSpreadPercent ? c.minRangeSpreadPercent / 100 : b, S = c.maxRangeSpreadPercent ? c.maxRangeSpreadPercent / 100 : b, C = Math.max(0, y), w = Math.max(0, C * (1 - x)), T = Math.max(w, C * (1 + S));
-	v === 0 && d === 0 && (C = 0, w = 0, T = 0);
-	let E = o(C, c.rounding), D = o(w, c.rounding), O = o(T, c.rounding);
-	return (i.pitch === "steep" || i.difficulty === "extreme" || i.urgency === "emergency") && _.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), E > 5e3 && _.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (i.material === "metal" || i.efficiency === "ultra") && _.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
-		min: D,
-		max: O,
-		target: E,
-		formattedMin: t(D, a, s),
-		formattedMax: t(O, a, s),
-		formattedTarget: t(E, a, s),
-		currency: a,
-		currencySymbol: s,
-		breakdown: g,
-		recommendations: _,
+	let M = Math.max(0, j), N = Math.max(0, e(M * (1 - S), "Minimum quote bound")), P = Math.max(M, e(M * (1 + C), "Maximum quote bound"));
+	A === 0 && y === 0 && (M = 0, N = 0, P = 0);
+	let F = f(M, h.rounding), I = f(N, h.rounding), L = f(P, h.rounding);
+	return r(I, F, L, "Quote result"), i(O, "Quote result"), (u.pitch === "steep" || u.difficulty === "extreme" || u.urgency === "emergency") && k.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), F > 5e3 && k.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (u.material === "metal" || u.efficiency === "ultra") && k.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
+		min: I,
+		max: L,
+		target: F,
+		formattedMin: s(I, p, m),
+		formattedMax: s(L, p, m),
+		formattedTarget: s(F, p, m),
+		currency: p,
+		currencySymbol: m,
+		breakdown: O,
+		recommendations: k,
 		calculatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-		quoteId: l
+		quoteId: g
 	};
 }
 //#endregion
 //#region src/core/attribution.ts
-function c() {
+function m() {
 	return "sess_" + Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(16)), (e) => e.toString(16).padStart(2, "0")).join("");
 }
-function l() {
+function h() {
 	if (typeof window > "u") return "desktop";
 	let e = navigator.userAgent.toLowerCase(), t = window.innerWidth || 1024;
 	return /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(e) || t >= 768 && t <= 1024 ? "tablet" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(e) || t < 768 ? "mobile" : "desktop";
 }
-function u(e) {
+function g(e) {
 	if (!e) return "";
 	try {
 		return new URL(e).hostname;
@@ -244,16 +295,16 @@ function u(e) {
 		return "";
 	}
 }
-function d(e = {}) {
+function _(e = {}) {
 	let t = typeof window < "u", n = t ? new URLSearchParams(window.location.search) : new URLSearchParams(), r = t && document.referrer || "", i = t && window.location.href || "", a = t && document.title || "", o = t && navigator.userAgent || "", s = e.customSessionId || "";
 	if (!s && t) {
 		let t = e.storageKey || "nymrel_quote_session_id";
 		try {
-			s = window.sessionStorage.getItem(t) || "", s || (s = c(), window.sessionStorage.setItem(t, s));
+			s = window.sessionStorage.getItem(t) || "", s || (s = m(), window.sessionStorage.setItem(t, s));
 		} catch {
-			s = c();
+			s = m();
 		}
-	} else s ||= c();
+	} else s ||= m();
 	return {
 		utm_source: n.get("utm_source") || void 0,
 		utm_medium: n.get("utm_medium") || void 0,
@@ -266,17 +317,17 @@ function d(e = {}) {
 		ttclid: n.get("ttclid") || void 0,
 		li_fat_id: n.get("li_fat_id") || void 0,
 		referrer: r,
-		referring_domain: u(r),
+		referring_domain: g(r),
 		landing_page: i,
 		page_title: a,
 		timestamp: (/* @__PURE__ */ new Date()).toISOString(),
 		source_label: e.sourceLabel,
 		session_id: s,
-		device_type: l(),
+		device_type: h(),
 		userAgent: o
 	};
 }
-function f(e, t = {}, n = {}) {
+function v(e, t = {}, n = {}) {
 	if (typeof window > "u") return;
 	let r = n.pushToDataLayer !== !1, i = n.useGtag !== !1, a = n.dispatchDomEvent !== !1, o = `${n.prefix || "nymrel_quote"}_${e}`, s = {
 		event: o,
@@ -300,22 +351,22 @@ function f(e, t = {}, n = {}) {
 		window.dispatchEvent(e);
 	} catch {}
 }
-function p(e, t) {
-	f("viewed", {
+function y(e, t) {
+	v("viewed", {
 		schemaId: e,
 		...t
 	});
 }
-function m(e, t, n, r) {
-	f("step_completed", {
+function b(e, t, n, r) {
+	v("step_completed", {
 		schemaId: e,
 		stepIndex: t,
 		stepTitle: n,
 		timeSpentMs: r
 	});
 }
-function h(e, t, n, r, i) {
-	f("calculated", {
+function x(e, t, n, r, i) {
+	v("calculated", {
 		schemaId: e,
 		target: t,
 		min: n,
@@ -323,8 +374,8 @@ function h(e, t, n, r, i) {
 		quoteId: i
 	});
 }
-function g(e, t, n, r) {
-	f("lead_submitted", {
+function S(e, t, n, r) {
+	v("lead_submitted", {
 		schemaId: e,
 		quoteId: t,
 		value: n,
@@ -332,8 +383,8 @@ function g(e, t, n, r) {
 		hasEmail: !!r
 	});
 }
-function _(e, t, n) {
-	f("cta_clicked", {
+function C(e, t, n) {
+	v("cta_clicked", {
 		schemaId: e,
 		ctaName: t,
 		quoteId: n
@@ -341,7 +392,7 @@ function _(e, t, n) {
 }
 //#endregion
 //#region src/components/WarmTheme.ts
-var v = {
+var w = {
 	mode: "warm",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Plus Jakarta Sans\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
 	primaryColor: "#2A332E",
@@ -356,7 +407,7 @@ var v = {
 	borderRadius: "14px",
 	boxShadow: "0 8px 30px -4px rgba(42, 51, 46, 0.08), 0 2px 8px -2px rgba(42, 51, 46, 0.04)",
 	focusRingColor: "rgba(168, 84, 31, 0.28)"
-}, y = {
+}, T = {
 	mode: "light",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
 	primaryColor: "#0F172A",
@@ -371,7 +422,7 @@ var v = {
 	borderRadius: "12px",
 	boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.06)",
 	focusRingColor: "rgba(37, 99, 235, 0.25)"
-}, b = {
+}, E = {
 	mode: "dark",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
 	primaryColor: "#F1F5F9",
@@ -387,13 +438,13 @@ var v = {
 	boxShadow: "0 8px 30px -4px rgba(0, 0, 0, 0.4)",
 	focusRingColor: "rgba(249, 115, 22, 0.3)"
 };
-function x(e) {
+function D(e) {
 	return {
-		...e?.mode === "dark" ? b : e?.mode === "light" ? y : v,
+		...e?.mode === "dark" ? E : e?.mode === "light" ? T : w,
 		...e
 	};
 }
-function S(e) {
+function O(e) {
 	return `
     --nym-font: ${e.fontFamily};
     --nym-primary: ${e.primaryColor};
@@ -412,7 +463,7 @@ function S(e) {
     --nym-error: #B83A2C;
   `;
 }
-function C(e) {
+function k(e) {
 	return `
     :host {
       display: block;
@@ -422,7 +473,7 @@ function C(e) {
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      ${S(x(e))}
+      ${O(D(e))}
     }
 
     *, *::before, *::after {
@@ -1150,7 +1201,7 @@ function C(e) {
 }
 //#endregion
 //#region src/core/lead-delivery.ts
-function w(e = (/* @__PURE__ */ new Date()).toISOString()) {
+function A(e = (/* @__PURE__ */ new Date()).toISOString()) {
 	return {
 		status: "not_configured",
 		channel: "none",
@@ -1158,7 +1209,7 @@ function w(e = (/* @__PURE__ */ new Date()).toISOString()) {
 		message: "Local capture only: no delivery destination is configured, so nothing was sent."
 	};
 }
-function T(e = (/* @__PURE__ */ new Date()).toISOString()) {
+function j(e = (/* @__PURE__ */ new Date()).toISOString()) {
 	return {
 		status: "callback_only",
 		channel: "callback",
@@ -1166,7 +1217,7 @@ function T(e = (/* @__PURE__ */ new Date()).toISOString()) {
 		message: "Captured locally and handed to this page. No external delivery was attempted."
 	};
 }
-async function E(e, t) {
+async function M(e, t) {
 	let n = (/* @__PURE__ */ new Date()).toISOString();
 	try {
 		let r = await fetch(e, {
@@ -1202,15 +1253,15 @@ async function E(e, t) {
 		};
 	}
 }
-function D(e) {
-	return e ? e.message : w().message;
+function N(e) {
+	return e ? e.message : A().message;
 }
 //#endregion
 //#region src/components/QuoteWidget.ts
-function O(e) {
+function P(e) {
 	return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-var k = class {
+var F = class {
 	container;
 	schema;
 	callbacks;
@@ -1234,26 +1285,26 @@ var k = class {
 		}), t.initialState && (this.formState = {
 			...this.formState,
 			...t.initialState
-		}), this.container = t.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? e.shadowRoot : e.attachShadow({ mode: "open" }) : e, this.currentQuote = s(this.schema, this.formState), p(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
+		}), this.container = t.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? e.shadowRoot : e.attachShadow({ mode: "open" }) : e, this.currentQuote = p(this.schema, this.formState), y(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
 	}
 	updateState(e, t) {
-		this.formState[e] = n(t), delete this.fieldErrors[e], this.recalculate();
+		this.formState[e] = c(t), delete this.fieldErrors[e], this.recalculate();
 	}
 	recalculate() {
-		return this.currentQuote = s(this.schema, this.formState), h(this.schema.id, this.currentQuote.target, this.currentQuote.min, this.currentQuote.max, this.currentQuote.quoteId), this.callbacks.onCalculate && this.callbacks.onCalculate(this.currentQuote, this.formState), this.render(), this.currentQuote;
+		return this.currentQuote = p(this.schema, this.formState), x(this.schema.id, this.currentQuote.target, this.currentQuote.min, this.currentQuote.max, this.currentQuote.quoteId), this.callbacks.onCalculate && this.callbacks.onCalculate(this.currentQuote, this.formState), this.render(), this.currentQuote;
 	}
 	nextStep() {
 		if (!this.isLeadFormStep()) {
 			let e = this.schema.steps[this.currentStepIndex], t = !1;
 			this.fieldErrors = {};
 			for (let n of e.fields) {
-				if (!r(n.condition, this.formState)) continue;
-				let e = a(n, this.formState[n.id]);
+				if (!l(n.condition, this.formState)) continue;
+				let e = d(n, this.formState[n.id]);
 				e.valid || (this.fieldErrors[n.id] = e.error || "Invalid value", t = !0);
 			}
 			if (t) return this.render(), !1;
 			let n = Date.now() - this.stepStartTime;
-			if (m(this.schema.id, this.currentStepIndex, e.title, n), this.currentStepIndex < this.schema.steps.length - 1) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.callbacks.onStepChange && this.callbacks.onStepChange(this.currentStepIndex, this.schema.steps[this.currentStepIndex]), this.render(), !0;
+			if (b(this.schema.id, this.currentStepIndex, e.title, n), this.currentStepIndex < this.schema.steps.length - 1) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.callbacks.onStepChange && this.callbacks.onStepChange(this.currentStepIndex, this.schema.steps[this.currentStepIndex]), this.render(), !0;
 			if (this.isLeadFormEnabled()) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.render(), !0;
 		}
 		return !1;
@@ -1272,38 +1323,38 @@ var k = class {
 	}
 	async submitLead(e) {
 		let t = this.schema.leadForm;
-		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), i(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
+		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), u(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
 		this.isSubmitting = !0, this.render();
-		let r = d({ sourceLabel: this.sourceLabel }), a = {
+		let n = _({ sourceLabel: this.sourceLabel }), r = {
 			quoteId: this.currentQuote.quoteId,
 			schemaId: this.schema.id,
 			schemaName: this.schema.name,
 			quote: this.currentQuote,
 			formState: { ...this.formState },
 			lead: {
-				name: n(e.name),
-				email: n(e.email),
-				phone: n(e.phone || ""),
-				address: n(e.address || ""),
-				zipCode: n(e.zipCode || ""),
-				preferredDate: n(e.preferredDate || ""),
-				preferredTime: n(e.preferredTime || ""),
-				notes: n(e.notes || "")
+				name: c(e.name),
+				email: c(e.email),
+				phone: c(e.phone || ""),
+				address: c(e.address || ""),
+				zipCode: c(e.zipCode || ""),
+				preferredDate: c(e.preferredDate || ""),
+				preferredTime: c(e.preferredTime || ""),
+				notes: c(e.notes || "")
 			},
-			attribution: r,
+			attribution: n,
 			submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
 			metadata: this.schema.metadata
 		};
 		try {
 			if (this.webhookUrl) {
-				let e = await E(this.webhookUrl, a);
-				(e.status === "rejected" || e.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", e.message), a.delivery = e;
-			} else a.delivery = this.callbacks.onSubmit ? T() : w();
+				let e = await M(this.webhookUrl, r);
+				(e.status === "rejected" || e.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", e.message), r.delivery = e;
+			} else r.delivery = this.callbacks.onSubmit ? j() : A();
 			if (this.callbacks.onSubmit) try {
-				await this.callbacks.onSubmit(a);
+				await this.callbacks.onSubmit(r);
 			} catch (e) {
-				a.localHandlingFailed = !0, a.delivery?.channel === "callback" && (a.delivery = {
-					...a.delivery,
+				r.localHandlingFailed = !0, r.delivery?.channel === "callback" && (r.delivery = {
+					...r.delivery,
 					status: "failed",
 					ok: !1,
 					message: "The page handler failed. No external delivery was attempted by the widget. Your quote is shown below."
@@ -1313,9 +1364,9 @@ var k = class {
 				} catch {}
 			}
 			try {
-				g(this.schema.id, a.quoteId, this.currentQuote.target, a.lead.email);
+				S(this.schema.id, r.quoteId, this.currentQuote.target, r.lead.email);
 			} catch {}
-			return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = a, this.lastDeliveryReceipt = a.delivery ?? null, this.render(), a;
+			return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = r, this.lastDeliveryReceipt = r.delivery ?? null, this.render(), r;
 		} catch (e) {
 			return this.isSubmitting = !1, this.callbacks.onError && this.callbacks.onError(e), this.fieldErrors._global = "Submission failed. Please check your connection and try again.", this.render(), null;
 		}
@@ -1334,18 +1385,18 @@ var k = class {
 		typeof window < "u" && window.print();
 	}
 	render() {
-		let e = C(this.schema.theme), t = "";
+		let e = k(this.schema.theme), t = "";
 		t = this.isSubmitted && this.lastSubmission ? this.renderSuccessScreen(this.lastSubmission) : this.isLeadFormStep() ? this.renderLeadFormStep() : this.renderStepForm(this.schema.steps[this.currentStepIndex]);
 		let n = this.showBreakdownModal ? this.renderBreakdownModal() : "", r = `
       <style>${e}</style>
-      <div class="nym-container" role="region" aria-label="${O(this.schema.name)}">
+      <div class="nym-container" role="region" aria-label="${P(this.schema.name)}">
         <!-- Header -->
         <header class="nym-header">
           <div class="nym-header-content">
-            <h2>${O(this.schema.name)}</h2>
-            ${this.schema.description ? `<p>${O(this.schema.description)}</p>` : ""}
+            <h2>${P(this.schema.name)}</h2>
+            ${this.schema.description ? `<p>${P(this.schema.description)}</p>` : ""}
           </div>
-          ${this.schema.badge ? `<span class="nym-badge">${O(this.schema.badge)}</span>` : ""}
+          ${this.schema.badge ? `<span class="nym-badge">${P(this.schema.badge)}</span>` : ""}
         </header>
 
         <!-- Live Reactive Range Banner -->
@@ -1353,11 +1404,11 @@ var k = class {
           <div class="nym-range-info">
             <span class="nym-range-label">Instant Estimated Range</span>
             <div class="nym-range-values">
-              <span class="nym-range-amount">${O(this.currentQuote.formattedMin)}</span>
+              <span class="nym-range-amount">${P(this.currentQuote.formattedMin)}</span>
               <span class="nym-range-separator">&ndash;</span>
-              <span class="nym-range-amount">${O(this.currentQuote.formattedMax)}</span>
+              <span class="nym-range-amount">${P(this.currentQuote.formattedMax)}</span>
             </div>
-            <span class="nym-range-target">Baseline Target: <strong>${O(this.currentQuote.formattedTarget)}</strong></span>
+            <span class="nym-range-target">Baseline Target: <strong>${P(this.currentQuote.formattedTarget)}</strong></span>
           </div>
           <button type="button" class="nym-btn-breakdown" id="nym-toggle-breakdown" aria-label="View cost breakdown">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
@@ -1374,7 +1425,7 @@ var k = class {
         </div>
         <div class="nym-step-legend">
           <span>Step ${this.currentStepIndex + 1} of ${this.getTotalStepsCount()}</span>
-          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : O(this.schema.steps[this.currentStepIndex]?.title || "")}</span>
+          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : P(this.schema.steps[this.currentStepIndex]?.title || "")}</span>
         </div>
 
         <!-- Main Step Form Content -->
@@ -1386,7 +1437,7 @@ var k = class {
             ${this.currentQuote.recommendations.map((e) => `
               <div class="nym-recommendation-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>${O(e)}</span>
+                <span>${P(e)}</span>
               </div>
             `).join("")}
           </div>
@@ -1411,8 +1462,8 @@ var k = class {
 		let t = this.currentStepIndex === 0;
 		return `
       <div class="nym-step-view">
-        <h3 class="nym-step-title">${O(e.title)}</h3>
-        ${e.subtitle ? `<p class="nym-step-subtitle">${O(e.subtitle)}</p>` : ""}
+        <h3 class="nym-step-title">${P(e.title)}</h3>
+        ${e.subtitle ? `<p class="nym-step-subtitle">${P(e.subtitle)}</p>` : ""}
 
         <div class="nym-fields-list">
           ${e.fields.map((e) => this.renderField(e)).join("")}
@@ -1428,62 +1479,62 @@ var k = class {
     `;
 	}
 	renderField(e) {
-		if (!r(e.condition, this.formState)) return "";
-		let t = this.formState[e.id] === void 0 ? e.defaultValue ?? "" : this.formState[e.id], n = this.fieldErrors[e.id], i = "";
+		if (!l(e.condition, this.formState)) return "";
+		let t = this.formState[e.id] === void 0 ? e.defaultValue ?? "" : this.formState[e.id], n = this.fieldErrors[e.id], r = "";
 		switch (e.type) {
 			case "slider": {
-				let n = e.min ?? 100, r = e.max ?? 5e3, a = e.step ?? 50, o = Number(t) || n;
-				i = `
+				let n = e.min ?? 100, i = e.max ?? 5e3, a = e.step ?? 50, o = Number(t) || n;
+				r = `
           <div class="nym-slider-container">
             <div class="nym-slider-header">
               <span class="nym-slider-ticks">${n} ${e.unit || ""}</span>
               <span class="nym-slider-val" id="val-${e.id}">${o} ${e.unit || ""}</span>
-              <span class="nym-slider-ticks">${r} ${e.unit || ""}</span>
+              <span class="nym-slider-ticks">${i} ${e.unit || ""}</span>
             </div>
             <input
               type="range"
               class="nym-slider nym-reactive-input"
               data-field-id="${e.id}"
               min="${n}"
-              max="${r}"
+              max="${i}"
               step="${a}"
               value="${o}"
-              aria-label="${O(e.label)}"
+              aria-label="${P(e.label)}"
             />
           </div>
         `;
 				break;
 			}
 			case "select":
-				i = `
-          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${O(e.label)}">
+				r = `
+          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${P(e.label)}">
             ${e.options?.map((e) => `
-              <option value="${O(e.id)}" ${String(t) === String(e.id) ? "selected" : ""}>
-                ${O(e.label)} ${e.adder ? `(+${this.currentQuote.currencySymbol}${e.adder})` : ""} ${e.multiplier ? `(${e.multiplier}x)` : ""}
+              <option value="${P(e.id)}" ${String(t) === String(e.id) ? "selected" : ""}>
+                ${P(e.label)} ${e.adder ? `(+${this.currentQuote.currencySymbol}${e.adder})` : ""} ${e.multiplier ? `(${e.multiplier}x)` : ""}
               </option>
             `).join("")}
           </select>
         `;
 				break;
 			case "radio":
-				i = `
-          <div class="nym-options-grid" role="radiogroup" aria-label="${O(e.label)}">
+				r = `
+          <div class="nym-options-grid" role="radiogroup" aria-label="${P(e.label)}">
             ${e.options?.map((n) => {
 					let r = String(t) === String(n.id);
 					return `
                 <div
                   class="nym-option-card ${r ? "selected" : ""}"
                   data-field-id="${e.id}"
-                  data-option-id="${O(n.id)}"
+                  data-option-id="${P(n.id)}"
                   role="radio"
                   aria-checked="${r}"
                   tabindex="0"
                 >
                   <div class="nym-option-header">
-                    <span class="nym-option-title">${O(n.label)}</span>
-                    ${n.badge ? `<span class="nym-option-badge">${O(n.badge)}</span>` : ""}
+                    <span class="nym-option-title">${P(n.label)}</span>
+                    ${n.badge ? `<span class="nym-option-badge">${P(n.badge)}</span>` : ""}
                   </div>
-                  ${n.description ? `<p class="nym-option-desc">${O(n.description)}</p>` : ""}
+                  ${n.description ? `<p class="nym-option-desc">${P(n.description)}</p>` : ""}
                   ${n.adder || n.multiplier ? `
                     <div class="nym-option-price">
                       ${n.adder ? `+${this.currentQuote.currencySymbol}${n.adder}` : ""}
@@ -1498,7 +1549,7 @@ var k = class {
 				break;
 			case "checkbox": {
 				let n = Array.isArray(t) ? t : [];
-				i = `
+				r = `
           <div class="nym-checkbox-list">
             ${e.options?.map((t) => {
 					let r = n.includes(t.id);
@@ -1506,7 +1557,7 @@ var k = class {
                 <div
                   class="nym-checkbox-item ${r ? "checked" : ""}"
                   data-field-id="${e.id}"
-                  data-checkbox-id="${O(t.id)}"
+                  data-checkbox-id="${P(t.id)}"
                   role="checkbox"
                   aria-checked="${r}"
                   tabindex="0"
@@ -1516,10 +1567,10 @@ var k = class {
                   </div>
                   <div class="nym-checkbox-info">
                     <div class="nym-checkbox-title">
-                      <span>${O(t.label)}</span>
+                      <span>${P(t.label)}</span>
                       ${t.adder ? `<span>+${this.currentQuote.currencySymbol}${t.adder}</span>` : ""}
                     </div>
-                    ${t.description ? `<div class="nym-checkbox-desc">${O(t.description)}</div>` : ""}
+                    ${t.description ? `<div class="nym-checkbox-desc">${P(t.description)}</div>` : ""}
                   </div>
                 </div>
               `;
@@ -1530,7 +1581,7 @@ var k = class {
 			}
 			case "number":
 			case "stepper":
-				i = `
+				r = `
           <input
             type="number"
             class="nym-input nym-reactive-input"
@@ -1538,32 +1589,32 @@ var k = class {
             min="${e.min ?? 0}"
             max="${e.max ?? 999999}"
             step="${e.step ?? 1}"
-            value="${O(t)}"
-            placeholder="${e.placeholder ? O(e.placeholder) : ""}"
-            aria-label="${O(e.label)}"
+            value="${P(t)}"
+            placeholder="${e.placeholder ? P(e.placeholder) : ""}"
+            aria-label="${P(e.label)}"
           />
         `;
 				break;
-			default: i = `
+			default: r = `
           <input
             type="text"
             class="nym-input nym-reactive-input"
             data-field-id="${e.id}"
-            value="${O(t)}"
-            placeholder="${e.placeholder ? O(e.placeholder) : ""}"
-            aria-label="${O(e.label)}"
+            value="${P(t)}"
+            placeholder="${e.placeholder ? P(e.placeholder) : ""}"
+            aria-label="${P(e.label)}"
           />
         `;
 		}
 		return `
       <div class="nym-field-group">
         <label class="nym-label">
-          <span>${O(e.label)}${e.required ? " *" : ""}</span>
-          ${e.unit && e.type !== "slider" ? `<span class="nym-helper-text">${O(e.unit)}</span>` : ""}
+          <span>${P(e.label)}${e.required ? " *" : ""}</span>
+          ${e.unit && e.type !== "slider" ? `<span class="nym-helper-text">${P(e.unit)}</span>` : ""}
         </label>
-        ${i}
-        ${e.helperText ? `<div class="nym-helper-text">${O(e.helperText)}</div>` : ""}
-        ${n ? `<div class="nym-error-text">${O(n)}</div>` : ""}
+        ${r}
+        ${e.helperText ? `<div class="nym-helper-text">${P(e.helperText)}</div>` : ""}
+        ${n ? `<div class="nym-error-text">${P(n)}</div>` : ""}
       </div>
     `;
 	}
@@ -1571,39 +1622,39 @@ var k = class {
 		let e = this.schema.leadForm, t = this.fieldErrors._global;
 		return `
       <div class="nym-lead-step">
-        <h3 class="nym-step-title">${O(e?.title || "Lock in Your Official Quote")}</h3>
-        <p class="nym-step-subtitle">${O(e?.subtitle || "Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.")}</p>
+        <h3 class="nym-step-title">${P(e?.title || "Lock in Your Official Quote")}</h3>
+        <p class="nym-step-subtitle">${P(e?.subtitle || "Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.")}</p>
 
-        ${t ? `<div class="nym-error-text" style="margin-bottom: 16px;">${O(t)}</div>` : ""}
+        ${t ? `<div class="nym-error-text" style="margin-bottom: 16px;">${P(t)}</div>` : ""}
 
         <form id="nym-lead-form">
           <div class="nym-field-group">
             <label class="nym-label">Full Name *</label>
-            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${O(this.formState._lead_name || "")}" />
-            ${this.fieldErrors.lead_name ? `<div class="nym-error-text">${O(this.fieldErrors.lead_name)}</div>` : ""}
+            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${P(this.formState._lead_name || "")}" />
+            ${this.fieldErrors.lead_name ? `<div class="nym-error-text">${P(this.fieldErrors.lead_name)}</div>` : ""}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Email Address *</label>
-            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${O(this.formState._lead_email || "")}" />
-            ${this.fieldErrors.lead_email ? `<div class="nym-error-text">${O(this.fieldErrors.lead_email)}</div>` : ""}
+            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${P(this.formState._lead_email || "")}" />
+            ${this.fieldErrors.lead_email ? `<div class="nym-error-text">${P(this.fieldErrors.lead_email)}</div>` : ""}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Phone Number ${e?.requirePhone ? "*" : "(Optional)"}</label>
-            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone ? "required" : ""} placeholder="(555) 019-2834" value="${O(this.formState._lead_phone || "")}" />
-            ${this.fieldErrors.lead_phone ? `<div class="nym-error-text">${O(this.fieldErrors.lead_phone)}</div>` : ""}
+            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone ? "required" : ""} placeholder="(555) 019-2834" value="${P(this.formState._lead_phone || "")}" />
+            ${this.fieldErrors.lead_phone ? `<div class="nym-error-text">${P(this.fieldErrors.lead_phone)}</div>` : ""}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="nym-field-group">
               <label class="nym-label">Street Address ${e?.requireAddress ? "*" : ""}</label>
-              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${O(this.formState._lead_address || "")}" />
-              ${this.fieldErrors.lead_address ? `<div class="nym-error-text">${O(this.fieldErrors.lead_address)}</div>` : ""}
+              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${P(this.formState._lead_address || "")}" />
+              ${this.fieldErrors.lead_address ? `<div class="nym-error-text">${P(this.fieldErrors.lead_address)}</div>` : ""}
             </div>
             <div class="nym-field-group">
               <label class="nym-label">Zip Code</label>
-              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${O(this.formState._lead_zip || "")}" />
+              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${P(this.formState._lead_zip || "")}" />
             </div>
           </div>
 
@@ -1611,7 +1662,7 @@ var k = class {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Date</label>
-                <input type="date" name="preferredDate" class="nym-input" value="${O(this.formState._lead_date || "")}" />
+                <input type="date" name="preferredDate" class="nym-input" value="${P(this.formState._lead_date || "")}" />
               </div>
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Window</label>
@@ -1627,12 +1678,12 @@ var k = class {
           ${e?.collectNotes === !1 ? "" : `
             <div class="nym-field-group">
               <label class="nym-label">Project Notes or Questions</label>
-              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${O(this.formState._lead_notes || "")}</textarea>
+              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${P(this.formState._lead_notes || "")}</textarea>
             </div>
           `}
 
           <div class="nym-helper-text" style="margin-bottom: 20px;">
-            ${O(e?.disclaimerText || "By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.")}
+            ${P(e?.disclaimerText || "By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.")}
           </div>
 
           <div class="nym-footer">
@@ -1652,37 +1703,37 @@ var k = class {
 		return `
       <div class="nym-success-screen">
         <div class="nym-success-icon">✓</div>
-        <h3 class="nym-step-title">${O(n && t?.successTitle || "Estimate Captured Successfully!")}</h3>
-        <p class="nym-step-subtitle">${O(n && t?.successMessage || "Your quote summary is below. Print or save a copy for your records.")}</p>
+        <h3 class="nym-step-title">${P(n && t?.successTitle || "Estimate Captured Successfully!")}</h3>
+        <p class="nym-step-subtitle">${P(n && t?.successMessage || "Your quote summary is below. Print or save a copy for your records.")}</p>
         ${e.localHandlingFailed ? "<p role=\"alert\">The page handler failed after capture. The delivery status below records the observed outcome.</p>" : ""}
 
         <div class="nym-receipt-card">
           <div class="nym-delivery-status nym-receipt-row" role="status">
             <span class="nym-receipt-key">Delivery Status:</span>
-            <span class="nym-receipt-val">${O(D(this.lastDeliveryReceipt))}</span>
+            <span class="nym-receipt-val">${P(N(this.lastDeliveryReceipt))}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Quote Reference ID:</span>
-            <span class="nym-receipt-val" style="font-family: monospace;">${O(e.quoteId)}</span>
+            <span class="nym-receipt-val" style="font-family: monospace;">${P(e.quoteId)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Estimated Price Range:</span>
             <span class="nym-receipt-val" style="color: var(--nym-accent); font-size: 1.05rem;">
-              ${O(e.quote.formattedMin)} &ndash; ${O(e.quote.formattedMax)}
+              ${P(e.quote.formattedMin)} &ndash; ${P(e.quote.formattedMax)}
             </span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Baseline Target:</span>
-            <span class="nym-receipt-val">${O(e.quote.formattedTarget)}</span>
+            <span class="nym-receipt-val">${P(e.quote.formattedTarget)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Recipient:</span>
-            <span class="nym-receipt-val">${O(e.lead.name)} (${O(e.lead.email)})</span>
+            <span class="nym-receipt-val">${P(e.lead.name)} (${P(e.lead.email)})</span>
           </div>
           ${e.lead.preferredDate ? `
             <div class="nym-receipt-row">
               <span class="nym-receipt-key">Requested Consultation:</span>
-              <span class="nym-receipt-val">${O(e.lead.preferredDate)} (${O(e.lead.preferredTime || "Anytime")})</span>
+              <span class="nym-receipt-val">${P(e.lead.preferredDate)} (${P(e.lead.preferredTime || "Anytime")})</span>
             </div>
           ` : ""}
         </div>
@@ -1713,19 +1764,19 @@ var k = class {
                 ${this.currentQuote.breakdown.map((e) => `
                   <tr>
                     <td>
-                      <div class="nym-breakdown-label">${O(e.label)}</div>
-                      ${e.description ? `<div class="nym-breakdown-subtext">${O(e.description)}</div>` : ""}
+                      <div class="nym-breakdown-label">${P(e.label)}</div>
+                      ${e.description ? `<div class="nym-breakdown-subtext">${P(e.description)}</div>` : ""}
                     </td>
-                    <td class="nym-breakdown-val">${O(e.formattedAmount)}</td>
+                    <td class="nym-breakdown-val">${P(e.formattedAmount)}</td>
                   </tr>
                 `).join("")}
                 <tr class="nym-breakdown-total">
                   <td><strong>Estimated Baseline Target</strong></td>
-                  <td class="nym-breakdown-val">${O(this.currentQuote.formattedTarget)}</td>
+                  <td class="nym-breakdown-val">${P(this.currentQuote.formattedTarget)}</td>
                 </tr>
                 <tr>
                   <td><strong>Dynamic Estimated Range</strong></td>
-                  <td class="nym-breakdown-val">${O(this.currentQuote.formattedMin)} &ndash; ${O(this.currentQuote.formattedMax)}</td>
+                  <td class="nym-breakdown-val">${P(this.currentQuote.formattedMin)} &ndash; ${P(this.currentQuote.formattedMax)}</td>
                 </tr>
               </tbody>
             </table>
@@ -1788,10 +1839,10 @@ var k = class {
 		s && s.addEventListener("click", () => this.reset());
 	}
 };
-function A(e, t) {
+function I(e, t) {
 	let n = typeof e == "string" ? document.querySelector(e) : e;
 	if (!n) throw Error(`[NymrelQuote] Container element not found: ${e}`);
-	return new k(n, t);
+	return new F(n, t);
 }
 //#endregion
-export { t as C, a as D, n as E, r as S, i as T, h as _, b as a, o as b, S as c, f as d, d as f, g, _ as h, E as i, C as l, u as m, A as n, v as o, l as p, T as r, y as s, k as t, x as u, p as v, e as w, s as x, m as y };
+export { s as C, d as D, c as E, l as S, u as T, x as _, E as a, f as b, O as c, v as d, _ as f, S as g, C as h, M as i, k as l, g as m, I as n, w as o, h as p, j as r, T as s, F as t, D as u, y as v, o as w, p as x, b as y };

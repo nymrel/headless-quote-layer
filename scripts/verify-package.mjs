@@ -115,6 +115,20 @@ for (const path of packedFiles) {
   );
 }
 
+const quoteWidgetChunks = [...packedFiles].filter((path) =>
+  /^dist\/QuoteWidget-.*\.(?:js|cjs)$/u.test(path)
+);
+assert.equal(
+  quoteWidgetChunks.filter((path) => path.endsWith('.js')).length,
+  1,
+  'Package must contain exactly one ESM QuoteWidget chunk'
+);
+assert.equal(
+  quoteWidgetChunks.filter((path) => path.endsWith('.cjs')).length,
+  1,
+  'Package must contain exactly one CommonJS QuoteWidget chunk'
+);
+
 for (const absolute of walk(resolve(root, 'dist'))) {
   const extension = extname(absolute);
   if (!['.js', '.cjs', '.ts'].includes(extension)) continue;

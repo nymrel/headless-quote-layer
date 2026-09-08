@@ -1,4 +1,4 @@
-import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, l as p, m, n as h, o as g, p as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-R7q69x3D.js";
+import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, l as p, m, n as h, o as g, p as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-C1EZZYjo.js";
 import { a as T, i as E, n as D, o as O, r as k, t as A } from "./presets-B56HpqVm.js";
 //#region src/web-component/NymrelQuoteLayer.ts
 var j = globalThis.HTMLElement ?? class {}, M = class extends j {
