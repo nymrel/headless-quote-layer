@@ -40,6 +40,19 @@ describe('Engine: Input Sanitization & Validation', () => {
     expect(sanitizeInput(dirty)).toBe('Hello World!');
   });
 
+  it('normalizes malformed and spaced script tags to plain text', () => {
+    expect(sanitizeInput('<script>alert(1)</script ><b>Hello</b>')).toBe('Hello');
+    expect(sanitizeInput('İ<script>alert(1)</script> safe')).toBe('İ safe');
+    expect(sanitizeInput('<<script>alert(1)</script>')).not.toMatch(/[<>]/);
+    expect(sanitizeInput('<script>unterminated')).toBe('');
+  });
+
+  it('rejects adversarial schema-field email input', () => {
+    const field: QuoteField = { id: 'email', label: 'Email', type: 'email' };
+    expect(validateField(field, '!@!.' + '!.'.repeat(10000)).valid).toBe(false);
+    expect(validateField(field, 'alex@example.com').valid).toBe(true);
+  });
+
   it('validates required fields', () => {
     const field: QuoteField = {
       id: 'test_field',

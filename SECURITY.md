@@ -2,9 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
+| Version | Supported |
+| ------- | --------- |
+| Unreleased `main` | :white_check_mark: |
+| npm releases | None yet |
 
 ## Security Architecture & Guarantees
 
@@ -22,4 +23,4 @@ If you discover a security vulnerability within this repository, please report i
 - **Email**: `contact@nymrel.com` (Subject: `[SECURITY] headless-quote-layer`)
 - **Parent Entity**: Nymrel / JalenBuilds LLC
 
-Please do not disclose security issues publicly until a patch has been released. We aim to acknowledge reports within 24 hours and issue fixes within 72 hours.
+Please do not disclose security issues publicly until a patch has been released. Nymrel will acknowledge and triage reports as quickly as practical without promising an unverified response or remediation window.

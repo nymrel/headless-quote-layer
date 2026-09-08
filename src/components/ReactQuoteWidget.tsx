@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
+  LeadDeliveryReceipt,
   QuoteResult,
   QuoteSchema,
   QuoteSubmission,
@@ -13,6 +14,10 @@ import {
 } from '../core/types';
 import { NymrelQuoteWidget } from './QuoteWidget';
 import { calculateQuote, sanitizeInput, validateField } from '../core/engine';
+import {
+  createCallbackOnlyReceipt,
+  deliverSubmissionViaWebhook
+} from '../core/lead-delivery';
 import { extractAttribution, trackLeadSubmitted } from '../core/attribution';
 
 export interface QuoteWidgetProps {
@@ -111,6 +116,7 @@ export function useQuoteEngine(
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [lastSubmission, setLastSubmission] = useState<QuoteSubmission | null>(null);
+  const [deliveryReceipt, setDeliveryReceipt] = useState<LeadDeliveryReceipt | null>(null);
 
   // Recalculate on state change
   useEffect(() => {
@@ -188,16 +194,17 @@ export function useQuoteEngine(
       metadata: schema.metadata
     };
 
+    // Truthful delivery receipt: only a resolved fetch with response.ok === true
+    // counts as acceptance. Without a webhookUrl the submission is handed back to
+    // the caller (local handling), which is recorded as callback-only.
     if (options.webhookUrl) {
-      try {
-        await fetch(options.webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(submission)
-        });
-      } catch (err) {
-        console.warn('[useQuoteEngine] Webhook error:', err);
+      const delivery = await deliverSubmissionViaWebhook(options.webhookUrl, submission);
+      if (delivery.status === 'rejected' || delivery.status === 'failed') {
+        console.warn('[useQuoteEngine] Webhook delivery notice:', delivery.message);
       }
+      submission.delivery = delivery;
+    } else {
+      submission.delivery = createCallbackOnlyReceipt();
     }
 
     trackLeadSubmitted(schema.id, submission.quoteId, quote.target, submission.lead.email);
@@ -205,6 +212,7 @@ export function useQuoteEngine(
     setIsSubmitting(false);
     setIsSubmitted(true);
     setLastSubmission(submission);
+    setDeliveryReceipt(submission.delivery ?? null);
     return submission;
   }, [schema, quote, formState]);
 
@@ -220,6 +228,7 @@ export function useQuoteEngine(
     setIsSubmitted(false);
     setIsSubmitting(false);
     setLastSubmission(null);
+    setDeliveryReceipt(null);
     setFieldErrors({});
   }, [schema, initialState]);
 
@@ -231,6 +240,7 @@ export function useQuoteEngine(
     isSubmitting,
     isSubmitted,
     lastSubmission,
+    deliveryReceipt,
     updateField,
     nextStep,
     prevStep,

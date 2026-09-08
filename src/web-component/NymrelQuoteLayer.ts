@@ -9,7 +9,13 @@ import { NymrelQuoteWidget } from '../components/QuoteWidget';
 import { getPreset } from '../presets';
 import { roofingPreset } from '../presets/roofing';
 
-export class NymrelQuoteLayerElement extends HTMLElement {
+// Keep package imports safe during SSR and build-time evaluation. Browser
+// instances still inherit the platform HTMLElement; this fallback is never
+// registered or instantiated outside a DOM runtime.
+const HTMLElementBase: typeof HTMLElement = globalThis.HTMLElement
+  ?? (class {} as unknown as typeof HTMLElement);
+
+export class NymrelQuoteLayerElement extends HTMLElementBase {
   private widgetInstance: NymrelQuoteWidget | null = null;
 
   static get observedAttributes(): string[] {
@@ -17,7 +23,7 @@ export class NymrelQuoteLayerElement extends HTMLElement {
   }
 
   connectedCallback(): void {
-    this.initWidget();
+    void this.initWidget();
   }
 
   disconnectedCallback(): void {
@@ -26,7 +32,7 @@ export class NymrelQuoteLayerElement extends HTMLElement {
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     if (oldValue !== newValue && this.isConnected) {
-      this.initWidget();
+      void this.initWidget();
     }
   }
 
@@ -61,7 +67,7 @@ export class NymrelQuoteLayerElement extends HTMLElement {
       } else {
         try {
           schema = JSON.parse(configAttr);
-        } catch (e) {
+        } catch {
           console.warn(`[NymrelQuoteLayer] Could not parse config attribute as JSON or preset name: "${configAttr}". Using default roofing preset.`);
         }
       }

@@ -20,5 +20,5 @@ export * from './web-component';
 // Presets
 export * from './presets';
 
-// React Integration
-export { QuoteWidget, useQuoteEngine, type QuoteWidgetProps } from './components/ReactQuoteWidget';
+// React integration is available from @nymrel/headless-quote/react.
+// Keep the vanilla entry independent of optional React peers.

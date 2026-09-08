@@ -2,7 +2,7 @@
  * @nymrel/headless-quote - Vanilla Interactive Quote Widget Renderer
  * Copyright 2026 Nymrel / JalenBuilds LLC
  */
-import { QuoteResult, QuoteSchema, QuoteSubmission, WidgetCallbacks } from '../core/types';
+import { LeadDeliveryReceipt, QuoteResult, QuoteSchema, QuoteSubmission, WidgetCallbacks } from '../core/types';
 export interface QuoteWidgetOptions {
     schema: QuoteSchema;
     initialState?: Record<string, any>;
@@ -22,6 +22,7 @@ export declare class NymrelQuoteWidget {
     private isSubmitted;
     private isSubmitting;
     private lastSubmission;
+    private lastDeliveryReceipt;
     private sourceLabel?;
     private webhookUrl?;
     private fieldErrors;
@@ -50,6 +51,12 @@ export declare class NymrelQuoteWidget {
      * Submit lead capture and finalize quote
      */
     submitLead(leadData: Record<string, any>): Promise<QuoteSubmission | null>;
+    /**
+     * Truthful delivery receipt for the most recent submission.
+     * Null before any submission; cleared by reset().
+     * Only `status === 'accepted'` reflects a verified (2xx) webhook response.
+     */
+    getLastDeliveryReceipt(): LeadDeliveryReceipt | null;
     /**
      * Reset Quote to initial state
      */

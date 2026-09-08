@@ -1,0 +1,132 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:truthy
+name: Continuous integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node ${{ matrix.node-version }} contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24, 26]
+    env:
+      NPM_CONFIG_AUDIT: 'false'
+      NPM_CONFIG_FUND: 'false'
+      NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          package-manager-cache: false
+
+      - name: Install exact npm outside the project contract
+        # npm is the package manager under test and must be bootstrapped before
+        # the repository's fail-closed devEngines contract is evaluated.
+        # zizmor: ignore[adhoc-packages]
+        working-directory: ${{ runner.temp }}
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run the complete package acceptance contract
+        run: npm run check
+
+  windows:
+    name: Windows Node 24 contracts
+    runs-on: windows-2025
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      NPM_CONFIG_AUDIT: 'false'
+      NPM_CONFIG_FUND: 'false'
+      NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install exact npm outside the project contract
+        # zizmor: ignore[adhoc-packages]
+        working-directory: ${{ runner.temp }}
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Install and run the complete acceptance contract
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check
+
+  security:
+    name: Dependency and workflow security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read  # Required so zizmor can inspect workflow/action metadata for annotations.
+      contents: read
+    env:
+      NPM_CONFIG_FUND: 'false'
+      NPM_CONFIG_IGNORE_SCRIPTS: 'true'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install exact npm outside the project contract
+        # zizmor: ignore[adhoc-packages]
+        working-directory: ${{ runner.temp }}
+        run: npm install --global npm@12.0.2 --ignore-scripts --no-audit --no-fund
+
+      - name: Fail on dependency vulnerabilities
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run audit:ci
+          npm run audit:prod
+
+      - name: Audit GitHub Actions definitions
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054  # v0.6.2
+        with:
+          advanced-security: false
+          annotations: true
+          min-confidence: medium
+          min-severity: medium
+          online-audits: false
+          persona: auditor
+          version: 1.29.0

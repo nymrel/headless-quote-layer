@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ mode }) => {
   const isStandalone = mode === 'standalone';
@@ -9,8 +9,9 @@ export default defineConfig(({ mode }) => {
     return {
       build: {
         emptyOutDir: false,
+        target: 'es2022',
         lib: {
-          entry: resolve(__dirname, 'src/standalone.ts'),
+          entry: resolve(import.meta.dirname, 'src/standalone.ts'),
           name: 'NymrelQuoteLayer',
           formats: ['iife', 'umd'],
           fileName: (format) => format === 'iife' ? 'quote-layer.min.js' : `quote-layer.${format}.js`
@@ -18,11 +19,10 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           output: {
             exports: 'named',
-            inlineDynamicImports: true,
             extend: true
           }
         },
-        minify: 'esbuild'
+        minify: true
       }
     };
   }
@@ -30,11 +30,12 @@ export default defineConfig(({ mode }) => {
   // Standard library build (ESM + CJS) + Preview app
   return {
     build: {
+      target: 'es2022',
       lib: {
         entry: {
-          index: resolve(__dirname, 'src/index.ts'),
-          react: resolve(__dirname, 'src/react.ts'),
-          presets: resolve(__dirname, 'src/presets/index.ts')
+          index: resolve(import.meta.dirname, 'src/index.ts'),
+          react: resolve(import.meta.dirname, 'src/react.ts'),
+          presets: resolve(import.meta.dirname, 'src/presets/index.ts')
         },
         formats: ['es', 'cjs'],
         fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`
@@ -52,7 +53,21 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: 'happy-dom',
-      globals: true
+      globals: false,
+      clearMocks: true,
+      restoreMocks: true,
+      include: ['test/**/*.test.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json-summary'],
+        reportsDirectory: 'coverage',
+        thresholds: {
+          statements: 58,
+          branches: 50,
+          functions: 55,
+          lines: 59
+        }
+      }
     }
   };
 });

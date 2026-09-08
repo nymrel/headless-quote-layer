@@ -22,7 +22,8 @@ export interface AnalyticsOptions {
  * Generate a random UUID-like session identifier
  */
 function generateSessionId(): string {
-  return 'sess_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  return 'sess_' + Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)),
+    byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**

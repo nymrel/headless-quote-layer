@@ -1,6 +1,6 @@
 # @nymrel/headless-quote
 
-[![npm version](https://img.shields.io/npm/v/@nymrel/headless-quote.svg?style=flat-square&color=A8541F)](https://www.npmjs.com/package/@nymrel/headless-quote)
+[![Package release](https://img.shields.io/badge/package%20release-gated-A8541F.svg?style=flat-square)](#release-status)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2A332E.svg?style=flat-square)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0-2E6B4F.svg?style=flat-square)]()
 [![Bundle Size](https://img.shields.io/badge/Bundle-20kB%20gzipped-2A332E.svg?style=flat-square)]()
@@ -63,7 +63,15 @@
 
 ## 🚀 Quickstart: 1-Line Embed
 
-Add this single tag anywhere in your HTML, Webflow custom code, or WordPress page:
+React consumers import `QuoteWidget`, `useQuoteEngine`, and `QuoteWidgetProps`
+from `@nymrel/headless-quote/react`. These exports are no longer re-exported by
+the vanilla package root, which can now load without React installed.
+
+### Release status
+
+`@nymrel/headless-quote` is not yet published to npm. The repository builds and validates a release archive, but the npm trusted-publisher setup, an accepted tag, and a public registry receipt are still required. The CDN and install examples below become valid only after that receipt exists.
+
+After the first accepted registry release, add this tag anywhere in your HTML, Webflow custom code, or WordPress page:
 
 ```html
 <!-- Load Nymrel Quote Layer CDN script -->
@@ -92,7 +100,7 @@ Add this single tag anywhere in your HTML, Webflow custom code, or WordPress pag
 
 ## ⚛️ React & Next.js Usage
 
-Install via npm or pnpm:
+After the first accepted registry release, install via npm:
 
 ```bash
 npm install @nymrel/headless-quote
@@ -296,6 +304,27 @@ When a lead submits their details, the widget automatically posts a structured J
 
 ---
 
+### Delivery receipt semantics
+
+`submitLead` preserves the captured submission locally and records what this
+browser observed in `submission.delivery`:
+
+- `accepted` means the configured webhook returned an HTTP 2xx response.
+- `rejected` means the webhook responded with a non-2xx status.
+- `failed` means the webhook request or local page handler failed; `channel`
+  identifies which attempt failed.
+- `callback_only` means the submission was handed to the local page handler;
+  no external delivery was attempted by the widget.
+- `not_configured` means no webhook or local callback delivery target exists.
+
+An `accepted` receipt confirms only the HTTP response from the configured
+endpoint. It does not prove downstream CRM persistence, email delivery, or any
+other provider-side outcome. A rejected or failed receipt leaves the quote and
+lead details available in the local submission and renders the observed failure
+instead of claiming delivery. Local-only capture does not send the lead anywhere.
+If a page callback fails after webhook acceptance, the accepted receipt remains
+available and `localHandlingFailed` records the separate callback error.
+
 ## 🎨 Design Philosophy: Nymrel Warm Paper
 
 Built under the **Nymrel Design Contract**, prioritizing organic, human-friendly warmth over harsh neon dark-modes:
@@ -331,17 +360,17 @@ Every package published under `@nymrel` satisfies the **Dual-Audience Rule**:
 git clone https://github.com/nymrel/headless-quote-layer.git
 cd headless-quote-layer
 
-# Install dependencies
-npm install
+# Install the exact package-manager contract
+corepack npm@12.0.2 install
 
-# Run Vitest test suites
-npm test
+# Run the complete quality, package, and workflow contract
+corepack npm@12.0.2 run check
 
 # Build production bundles (ESM, CJS, Standalone IIFE, Types)
-npm run build
+corepack npm@12.0.2 run build
 
 # Start interactive preview playground
-npm run dev
+corepack npm@12.0.2 run dev
 ```
 
 ---
@@ -351,4 +380,4 @@ npm run dev
 - **License**: MIT License
 - **Copyright**: &copy; 2026 Nymrel / JalenBuilds LLC (`contact@nymrel.com`)
 - **Parent Legal Entity**: JalenBuilds LLC
-- **Lead Architect**: Built by Jalen
+- **Maintainer**: Nymrel (`contact@nymrel.com`)

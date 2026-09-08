@@ -11,4 +11,3 @@ export * from './components/QuoteWidget';
 export * from './web-component/NymrelQuoteLayer';
 export * from './web-component';
 export * from './presets';
-export { QuoteWidget, useQuoteEngine, type QuoteWidgetProps } from './components/ReactQuoteWidget';
