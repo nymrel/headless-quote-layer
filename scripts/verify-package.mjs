@@ -115,6 +115,20 @@ for (const path of packedFiles) {
   );
 }
 
+const quoteWidgetChunks = [...packedFiles].filter((path) =>
+  /^dist\/QuoteWidget-.*\.(?:js|cjs)$/u.test(path)
+);
+assert.equal(
+  quoteWidgetChunks.filter((path) => path.endsWith('.js')).length,
+  1,
+  'Package must contain exactly one ESM QuoteWidget chunk'
+);
+assert.equal(
+  quoteWidgetChunks.filter((path) => path.endsWith('.cjs')).length,
+  1,
+  'Package must contain exactly one CommonJS QuoteWidget chunk'
+);
+
 for (const absolute of walk(resolve(root, 'dist'))) {
   const extension = extname(absolute);
   if (!['.js', '.cjs', '.ts'].includes(extension)) continue;
@@ -135,6 +149,22 @@ const cjs = require(resolve(root, 'dist/index.cjs'));
 assert.equal(typeof cjs.calculateQuote, 'function');
 const reactCjs = require(resolve(root, 'dist/react.cjs'));
 assert.equal(typeof reactCjs.QuoteWidget, 'function');
+
+for (const runtime of [esm, cjs]) {
+  const schema = {
+    id: 'custom-output-package', name: 'Custom output package', steps: [],
+    pricing: { formula: 'custom', customFormula: () => ({ min: 0, target: 2, max: 3 }) }
+  };
+  const result = runtime.calculateQuote(schema, {});
+  assert.deepEqual([result.min, result.target, result.max], [0, 2, 3]);
+  schema.pricing.customFormula = () => ({ min: '10', target: '2', max: '30' });
+  assert.throws(() => runtime.calculateQuote(schema, {}), /Custom quote result.*finite number/);
+  schema.pricing.customFormula = () => ({
+    min: 0, target: 2, max: 3,
+    breakdown: [{ id: 'bad', label: 'Bad', amount: '1', formattedAmount: '$1', type: 'base' }]
+  });
+  assert.throws(() => runtime.calculateQuote(schema, {}), /breakdown item "bad" amount.*finite number/);
+}
 
 // A real installed tarball must work without the repository's React dev dependency.
 const tempRoot = resolve(tmpdir());
