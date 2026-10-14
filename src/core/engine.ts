@@ -44,18 +44,24 @@ function positiveNumber(value: unknown, setting: string): number {
   return numeric;
 }
 
+function assertFiniteResultNumber(value: unknown, setting: string): void {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new RangeError(`${setting} must be a finite number.`);
+  }
+}
+
 function assertOrderedRange(min: number, target: number, max: number, setting: string): void {
-  nonNegativeNumber(min, `${setting}.min`);
-  nonNegativeNumber(target, `${setting}.target`);
-  nonNegativeNumber(max, `${setting}.max`);
-  if (min > target || target > max) {
+  assertFiniteResultNumber(min, `${setting}.min`);
+  assertFiniteResultNumber(target, `${setting}.target`);
+  assertFiniteResultNumber(max, `${setting}.max`);
+  if (min < 0 || min > target || target > max) {
     throw new RangeError(`${setting} must satisfy 0 <= min <= target <= max.`);
   }
 }
 
 function assertFiniteBreakdown(breakdown: QuoteBreakdownItem[], setting: string): void {
   for (const item of breakdown) {
-    finiteNumber(item.amount, `${setting} breakdown item "${item.id}" amount`);
+    assertFiniteResultNumber(item.amount, `${setting} breakdown item "${item.id}" amount`);
   }
 }
 

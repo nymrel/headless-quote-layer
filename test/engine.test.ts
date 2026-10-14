@@ -401,7 +401,52 @@ describe('Engine: Quote Calculation & Dynamic Range', () => {
     }, {})).toThrow(/Custom quote result/);
   });
 
-  it('rejects non-finite custom breakdown amounts', () => {
+  it.each([
+    { min: '10', target: '2', max: '30' },
+    { min: '0', target: 2, max: 3 },
+    { min: 0, target: '2', max: 3 },
+    { min: 0, target: 2, max: '3' }
+  ])('rejects string-valued custom formula bounds (%o)', (customResult) => {
+    expect(() => calculateQuote({
+      id: 'custom-string-bounds',
+      name: 'Custom string bounds',
+      pricing: {
+        formula: 'custom',
+        customFormula: () => customResult as unknown as {
+          min: number; target: number; max: number
+        }
+      },
+      steps: []
+    }, {})).toThrow(/Custom quote result.*finite number/);
+  });
+
+  it('preserves numeric form text and finite numeric custom results', () => {
+    const custom = calculateQuote({
+      id: 'custom-numeric-result',
+      name: 'Custom numeric result',
+      pricing: {
+        formula: 'custom',
+        rounding: 'none',
+        customFormula: () => ({ min: 0, target: 2, max: 3 })
+      },
+      steps: []
+    }, {});
+    expect([custom.min, custom.target, custom.max]).toEqual([0, 2, 3]);
+
+    const standard = calculateQuote({
+      id: 'numeric-form-text',
+      name: 'Numeric form text',
+      pricing: { marginPercent: 0 },
+      steps: [{
+        id: 'quantity',
+        title: 'Quantity',
+        fields: [{ id: 'quantity', label: 'Quantity', type: 'number', unitPrice: 2 }]
+      }]
+    }, { quantity: '2' });
+    expect([standard.min, standard.target, standard.max]).toEqual([4, 4, 4]);
+  });
+
+  it.each([Infinity, '1'])('rejects nonnumeric or non-finite custom breakdown amounts (%s)', (amount) => {
     expect(() => calculateQuote({
       id: 'custom-breakdown-invalid',
       name: 'Custom breakdown invalid',
@@ -414,7 +459,7 @@ describe('Engine: Quote Calculation & Dynamic Range', () => {
           breakdown: [{
             id: 'bad',
             label: 'Bad',
-            amount: Infinity,
+            amount: amount as unknown as number,
             formattedAmount: '$Infinity',
             type: 'base'
           }]

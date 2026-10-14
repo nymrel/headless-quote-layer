@@ -20,13 +20,16 @@ function n(t, n) {
 	if (r <= 0) throw RangeError(`${n} must be greater than zero.`);
 	return r;
 }
-function r(e, n, r, i) {
-	if (t(e, `${i}.min`), t(n, `${i}.target`), t(r, `${i}.max`), e > n || n > r) throw RangeError(`${i} must satisfy 0 <= min <= target <= max.`);
+function r(e, t) {
+	if (typeof e != "number" || !Number.isFinite(e)) throw RangeError(`${t} must be a finite number.`);
 }
-function i(t, n) {
-	for (let r of t) e(r.amount, `${n} breakdown item "${r.id}" amount`);
+function i(e, t, n, i) {
+	if (r(e, `${i}.min`), r(t, `${i}.target`), r(n, `${i}.max`), e < 0 || e > t || t > n) throw RangeError(`${i} must satisfy 0 <= min <= target <= max.`);
 }
-function a(r) {
+function a(e, t) {
+	for (let n of e) r(n.amount, `${t} breakdown item "${n.id}" amount`);
+}
+function o(r) {
 	for (let i of r) {
 		let r = `Field "${i.id}"`;
 		if (i.min !== void 0 && e(i.min, `${r} min`), i.max !== void 0 && e(i.max, `${r} max`), i.step !== void 0 && n(i.step, `${r} step`), i.min !== void 0 && i.max !== void 0 && i.min > i.max) throw RangeError(`${r} must satisfy min <= max.`);
@@ -37,15 +40,15 @@ function a(r) {
 		}
 	}
 }
-function o(e = "NYM") {
+function s(e = "NYM") {
 	let t = /* @__PURE__ */ new Date();
 	return `${e}-${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, "0")}${String(t.getDate()).padStart(2, "0")}-${Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(6)), (e) => (e % 36).toString(36)).join("").toUpperCase()}`;
 }
-function s(t, n = "USD", r = "$", i = 0) {
+function c(t, n = "USD", r = "$", i = 0) {
 	let a = e(t, "Currency amount"), o = (i > 0 ? a.toFixed(i) : Math.round(a).toString()).split(".");
 	return o[0] = o[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","), `${r}${o.join(".")}`;
 }
-function c(t) {
+function l(t) {
 	if (t == null) return t;
 	if (typeof t == "string") {
 		let e = "", n = !1, r = !1;
@@ -58,9 +61,9 @@ function c(t) {
 		}
 		return e.trim();
 	}
-	return typeof t == "number" ? e(t, "Numeric input") : Array.isArray(t) ? t.map(c) : t;
+	return typeof t == "number" ? e(t, "Numeric input") : Array.isArray(t) ? t.map(l) : t;
 }
-function l(e, t) {
+function u(e, t) {
 	if (!e || !e.fieldId) return !0;
 	let n = t[e.fieldId];
 	switch (e.operator) {
@@ -73,14 +76,14 @@ function l(e, t) {
 		default: return !0;
 	}
 }
-function u(e) {
+function d(e) {
 	if (typeof e != "string") return !1;
 	let t = e;
 	if (!t || t.length > 254 || /\s/u.test(t)) return !1;
 	let n = t.indexOf("@"), r = t.slice(n + 1), i = r.lastIndexOf(".");
 	return n > 0 && n === t.lastIndexOf("@") && i > 0 && i < r.length - 1;
 }
-function d(e, t) {
+function f(e, t) {
 	if (e.required && (t == null || t === "" || Array.isArray(t) && t.length === 0)) return {
 		valid: !1,
 		error: `${e.label} is required.`
@@ -109,7 +112,7 @@ function d(e, t) {
 				error: `Maximum value is ${e.max} ${e.unit || ""}`.trim()
 			};
 		}
-		if (e.type === "email" && !u(t)) return {
+		if (e.type === "email" && !d(t)) return {
 			valid: !1,
 			error: "Please enter a valid email address."
 		};
@@ -123,7 +126,7 @@ function d(e, t) {
 	}
 	return { valid: !0 };
 }
-function f(t, n) {
+function p(t, n) {
 	if (e(t, "Rounding amount"), !n || n === "none") return t;
 	switch (n) {
 		case "round": return Math.round(t);
@@ -135,26 +138,26 @@ function f(t, n) {
 		default: return t;
 	}
 }
-function p(c, u) {
-	let p = c.pricing?.currency || "USD", m = c.pricing?.currencySymbol || "$", h = c.pricing || {}, g = u._quoteId || o(), _ = [];
-	if (c.steps.forEach((e) => {
+function m(r, l) {
+	let d = r.pricing?.currency || "USD", m = r.pricing?.currencySymbol || "$", h = r.pricing || {}, g = l._quoteId || s(), _ = [];
+	if (r.steps.forEach((e) => {
 		e.fields.forEach((e) => {
 			_.push(e);
 		});
-	}), a(_), h.formula === "custom" && typeof h.customFormula == "function") {
-		let e = h.customFormula(u, _);
-		r(e.min, e.target, e.max, "Custom quote result");
+	}), o(_), h.formula === "custom" && typeof h.customFormula == "function") {
+		let e = h.customFormula(l, _);
+		i(e.min, e.target, e.max, "Custom quote result");
 		let t = e.breakdown || [];
-		i(t, "Custom quote result");
-		let n = f(e.target, h.rounding), a = f(e.min, h.rounding), o = f(e.max, h.rounding);
-		return r(a, n, o, "Custom quote result"), {
-			min: a,
+		a(t, "Custom quote result");
+		let n = p(e.target, h.rounding), r = p(e.min, h.rounding), o = p(e.max, h.rounding);
+		return i(r, n, o, "Custom quote result"), {
+			min: r,
 			max: o,
 			target: n,
-			formattedMin: s(a, p, m),
-			formattedMax: s(o, p, m),
-			formattedTarget: s(n, p, m),
-			currency: p,
+			formattedMin: c(r, d, m),
+			formattedMax: c(o, d, m),
+			formattedTarget: c(n, d, m),
+			currency: d,
 			currencySymbol: m,
 			breakdown: t,
 			recommendations: [],
@@ -167,26 +170,26 @@ function p(c, u) {
 		id: "base-fee",
 		label: "Base Callout / Setup Fee",
 		amount: y,
-		formattedAmount: s(y, p, m),
+		formattedAmount: c(y, d, m),
 		type: "base",
 		description: "Standard initial mobilization and inspection base"
 	});
 	for (let r of _) {
-		if (!l(r.condition, u)) continue;
-		let i = u[r.id] === void 0 ? r.defaultValue : u[r.id];
+		if (!u(r.condition, l)) continue;
+		let i = l[r.id] === void 0 ? r.defaultValue : l[r.id];
 		if (i != null && i !== "") {
 			if (r.type === "number" || r.type === "slider" || r.type === "stepper") {
-				let a = t(i, `Field "${r.id}" value`), o = d(r, a);
+				let a = t(i, `Field "${r.id}" value`), o = f(r, a);
 				if (!o.valid) throw RangeError(`Field "${r.id}" is invalid: ${o.error}`);
-				let c = r.unitPrice === void 0 ? void 0 : t(r.unitPrice, `Field "${r.id}" unitPrice`), l = r.multiplier === void 0 ? void 0 : n(r.multiplier, `Field "${r.id}" multiplier`);
+				let s = r.unitPrice === void 0 ? void 0 : t(r.unitPrice, `Field "${r.id}" unitPrice`), l = r.multiplier === void 0 ? void 0 : n(r.multiplier, `Field "${r.id}" multiplier`);
 				if (a > 0) {
-					if (c !== void 0 && c > 0) {
-						let t = e(a * c, `Field "${r.id}" item cost`);
+					if (s !== void 0 && s > 0) {
+						let t = e(a * s, `Field "${r.id}" item cost`);
 						r.category === "material" ? w = e(w + t, "Material subtotal") : T = e(T + t, "Labor subtotal"), O.push({
 							id: r.id,
-							label: `${r.label} (${a} ${r.unit || "units"} @ ${s(c, p, m)}/${r.unit || "unit"})`,
+							label: `${r.label} (${a} ${r.unit || "units"} @ ${c(s, d, m)}/${r.unit || "unit"})`,
 							amount: t,
-							formattedAmount: s(t, p, m),
+							formattedAmount: c(t, d, m),
 							type: r.category === "material" ? "material" : "labor"
 						});
 					}
@@ -201,7 +204,7 @@ function p(c, u) {
 						id: `${r.id}-${t.id}`,
 						label: `${r.label}: ${t.label}`,
 						amount: i,
-						formattedAmount: s(i, p, m),
+						formattedAmount: c(i, d, m),
 						type: r.category === "material" ? "material" : "addon",
 						description: t.description
 					}));
@@ -225,7 +228,7 @@ function p(c, u) {
 							id: `${r.id}-${i.id}`,
 							label: i.label,
 							amount: t,
-							formattedAmount: s(t, p, m),
+							formattedAmount: c(t, d, m),
 							type: "addon",
 							description: i.description
 						}));
@@ -239,7 +242,7 @@ function p(c, u) {
 						id: r.id,
 						label: r.label,
 						amount: i,
-						formattedAmount: s(i, p, m),
+						formattedAmount: c(i, d, m),
 						type: "addon"
 					}));
 					let a = r.multiplier === void 0 ? void 0 : n(r.multiplier, `Field "${r.id}" multiplier`);
@@ -255,21 +258,21 @@ function p(c, u) {
 			id: "tax",
 			label: `Estimated Tax (${(b * 100).toFixed(1)}%)`,
 			amount: t,
-			formattedAmount: s(t, p, m),
+			formattedAmount: c(t, d, m),
 			type: "tax"
 		}), j = e(j + t, "Taxed quote target");
 	}
 	let M = Math.max(0, j), N = Math.max(0, e(M * (1 - S), "Minimum quote bound")), P = Math.max(M, e(M * (1 + C), "Maximum quote bound"));
 	A === 0 && y === 0 && (M = 0, N = 0, P = 0);
-	let F = f(M, h.rounding), I = f(N, h.rounding), L = f(P, h.rounding);
-	return r(I, F, L, "Quote result"), i(O, "Quote result"), (u.pitch === "steep" || u.difficulty === "extreme" || u.urgency === "emergency") && k.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), F > 5e3 && k.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (u.material === "metal" || u.efficiency === "ultra") && k.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
+	let F = p(M, h.rounding), I = p(N, h.rounding), L = p(P, h.rounding);
+	return i(I, F, L, "Quote result"), a(O, "Quote result"), (l.pitch === "steep" || l.difficulty === "extreme" || l.urgency === "emergency") && k.push("Priority Crew Dispatch: Includes safety rigging and on-site supervisor."), F > 5e3 && k.push("Flexible Financing Available: 0% APR for 12 months on qualifying projects."), (l.material === "metal" || l.efficiency === "ultra") && k.push("Qualifies for Energy Efficiency Tax Credits & Lifetime Manufacturer Warranty."), {
 		min: I,
 		max: L,
 		target: F,
-		formattedMin: s(I, p, m),
-		formattedMax: s(L, p, m),
-		formattedTarget: s(F, p, m),
-		currency: p,
+		formattedMin: c(I, d, m),
+		formattedMax: c(L, d, m),
+		formattedTarget: c(F, d, m),
+		currency: d,
 		currencySymbol: m,
 		breakdown: O,
 		recommendations: k,
@@ -279,15 +282,15 @@ function p(c, u) {
 }
 //#endregion
 //#region src/core/attribution.ts
-function m() {
+function h() {
 	return "sess_" + Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(16)), (e) => e.toString(16).padStart(2, "0")).join("");
 }
-function h() {
+function g() {
 	if (typeof window > "u") return "desktop";
 	let e = navigator.userAgent.toLowerCase(), t = window.innerWidth || 1024;
 	return /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(e) || t >= 768 && t <= 1024 ? "tablet" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(e) || t < 768 ? "mobile" : "desktop";
 }
-function g(e) {
+function _(e) {
 	if (!e) return "";
 	try {
 		return new URL(e).hostname;
@@ -295,16 +298,16 @@ function g(e) {
 		return "";
 	}
 }
-function _(e = {}) {
+function v(e = {}) {
 	let t = typeof window < "u", n = t ? new URLSearchParams(window.location.search) : new URLSearchParams(), r = t && document.referrer || "", i = t && window.location.href || "", a = t && document.title || "", o = t && navigator.userAgent || "", s = e.customSessionId || "";
 	if (!s && t) {
 		let t = e.storageKey || "nymrel_quote_session_id";
 		try {
-			s = window.sessionStorage.getItem(t) || "", s || (s = m(), window.sessionStorage.setItem(t, s));
+			s = window.sessionStorage.getItem(t) || "", s || (s = h(), window.sessionStorage.setItem(t, s));
 		} catch {
-			s = m();
+			s = h();
 		}
-	} else s ||= m();
+	} else s ||= h();
 	return {
 		utm_source: n.get("utm_source") || void 0,
 		utm_medium: n.get("utm_medium") || void 0,
@@ -317,17 +320,17 @@ function _(e = {}) {
 		ttclid: n.get("ttclid") || void 0,
 		li_fat_id: n.get("li_fat_id") || void 0,
 		referrer: r,
-		referring_domain: g(r),
+		referring_domain: _(r),
 		landing_page: i,
 		page_title: a,
 		timestamp: (/* @__PURE__ */ new Date()).toISOString(),
 		source_label: e.sourceLabel,
 		session_id: s,
-		device_type: h(),
+		device_type: g(),
 		userAgent: o
 	};
 }
-function v(e, t = {}, n = {}) {
+function y(e, t = {}, n = {}) {
 	if (typeof window > "u") return;
 	let r = n.pushToDataLayer !== !1, i = n.useGtag !== !1, a = n.dispatchDomEvent !== !1, o = `${n.prefix || "nymrel_quote"}_${e}`, s = {
 		event: o,
@@ -351,22 +354,22 @@ function v(e, t = {}, n = {}) {
 		window.dispatchEvent(e);
 	} catch {}
 }
-function y(e, t) {
-	v("viewed", {
+function b(e, t) {
+	y("viewed", {
 		schemaId: e,
 		...t
 	});
 }
-function b(e, t, n, r) {
-	v("step_completed", {
+function x(e, t, n, r) {
+	y("step_completed", {
 		schemaId: e,
 		stepIndex: t,
 		stepTitle: n,
 		timeSpentMs: r
 	});
 }
-function x(e, t, n, r, i) {
-	v("calculated", {
+function S(e, t, n, r, i) {
+	y("calculated", {
 		schemaId: e,
 		target: t,
 		min: n,
@@ -374,8 +377,8 @@ function x(e, t, n, r, i) {
 		quoteId: i
 	});
 }
-function S(e, t, n, r) {
-	v("lead_submitted", {
+function C(e, t, n, r) {
+	y("lead_submitted", {
 		schemaId: e,
 		quoteId: t,
 		value: n,
@@ -383,8 +386,8 @@ function S(e, t, n, r) {
 		hasEmail: !!r
 	});
 }
-function C(e, t, n) {
-	v("cta_clicked", {
+function w(e, t, n) {
+	y("cta_clicked", {
 		schemaId: e,
 		ctaName: t,
 		quoteId: n
@@ -392,7 +395,7 @@ function C(e, t, n) {
 }
 //#endregion
 //#region src/components/WarmTheme.ts
-var w = {
+var T = {
 	mode: "warm",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Plus Jakarta Sans\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
 	primaryColor: "#2A332E",
@@ -407,7 +410,7 @@ var w = {
 	borderRadius: "14px",
 	boxShadow: "0 8px 30px -4px rgba(42, 51, 46, 0.08), 0 2px 8px -2px rgba(42, 51, 46, 0.04)",
 	focusRingColor: "rgba(168, 84, 31, 0.28)"
-}, T = {
+}, E = {
 	mode: "light",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
 	primaryColor: "#0F172A",
@@ -422,7 +425,7 @@ var w = {
 	borderRadius: "12px",
 	boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.06)",
 	focusRingColor: "rgba(37, 99, 235, 0.25)"
-}, E = {
+}, D = {
 	mode: "dark",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
 	primaryColor: "#F1F5F9",
@@ -438,13 +441,13 @@ var w = {
 	boxShadow: "0 8px 30px -4px rgba(0, 0, 0, 0.4)",
 	focusRingColor: "rgba(249, 115, 22, 0.3)"
 };
-function D(e) {
+function O(e) {
 	return {
-		...e?.mode === "dark" ? E : e?.mode === "light" ? T : w,
+		...e?.mode === "dark" ? D : e?.mode === "light" ? E : T,
 		...e
 	};
 }
-function O(e) {
+function k(e) {
 	return `
     --nym-font: ${e.fontFamily};
     --nym-primary: ${e.primaryColor};
@@ -463,7 +466,7 @@ function O(e) {
     --nym-error: #B83A2C;
   `;
 }
-function k(e) {
+function A(e) {
 	return `
     :host {
       display: block;
@@ -473,7 +476,7 @@ function k(e) {
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      ${O(D(e))}
+      ${k(O(e))}
     }
 
     *, *::before, *::after {
@@ -1201,7 +1204,7 @@ function k(e) {
 }
 //#endregion
 //#region src/core/lead-delivery.ts
-function A(e = (/* @__PURE__ */ new Date()).toISOString()) {
+function j(e = (/* @__PURE__ */ new Date()).toISOString()) {
 	return {
 		status: "not_configured",
 		channel: "none",
@@ -1209,7 +1212,7 @@ function A(e = (/* @__PURE__ */ new Date()).toISOString()) {
 		message: "Local capture only: no delivery destination is configured, so nothing was sent."
 	};
 }
-function j(e = (/* @__PURE__ */ new Date()).toISOString()) {
+function M(e = (/* @__PURE__ */ new Date()).toISOString()) {
 	return {
 		status: "callback_only",
 		channel: "callback",
@@ -1217,7 +1220,7 @@ function j(e = (/* @__PURE__ */ new Date()).toISOString()) {
 		message: "Captured locally and handed to this page. No external delivery was attempted."
 	};
 }
-async function M(e, t) {
+async function N(e, t) {
 	let n = (/* @__PURE__ */ new Date()).toISOString();
 	try {
 		let r = await fetch(e, {
@@ -1253,15 +1256,15 @@ async function M(e, t) {
 		};
 	}
 }
-function N(e) {
-	return e ? e.message : A().message;
+function P(e) {
+	return e ? e.message : j().message;
 }
 //#endregion
 //#region src/components/QuoteWidget.ts
-function P(e) {
+function F(e) {
 	return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
-var F = class {
+var I = class {
 	container;
 	schema;
 	callbacks;
@@ -1285,26 +1288,26 @@ var F = class {
 		}), t.initialState && (this.formState = {
 			...this.formState,
 			...t.initialState
-		}), this.container = t.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? e.shadowRoot : e.attachShadow({ mode: "open" }) : e, this.currentQuote = p(this.schema, this.formState), y(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
+		}), this.container = t.useShadowDom !== !1 && e.attachShadow ? e.shadowRoot ? e.shadowRoot : e.attachShadow({ mode: "open" }) : e, this.currentQuote = m(this.schema, this.formState), b(this.schema.id, { sourceLabel: this.sourceLabel }), this.render();
 	}
 	updateState(e, t) {
-		this.formState[e] = c(t), delete this.fieldErrors[e], this.recalculate();
+		this.formState[e] = l(t), delete this.fieldErrors[e], this.recalculate();
 	}
 	recalculate() {
-		return this.currentQuote = p(this.schema, this.formState), x(this.schema.id, this.currentQuote.target, this.currentQuote.min, this.currentQuote.max, this.currentQuote.quoteId), this.callbacks.onCalculate && this.callbacks.onCalculate(this.currentQuote, this.formState), this.render(), this.currentQuote;
+		return this.currentQuote = m(this.schema, this.formState), S(this.schema.id, this.currentQuote.target, this.currentQuote.min, this.currentQuote.max, this.currentQuote.quoteId), this.callbacks.onCalculate && this.callbacks.onCalculate(this.currentQuote, this.formState), this.render(), this.currentQuote;
 	}
 	nextStep() {
 		if (!this.isLeadFormStep()) {
 			let e = this.schema.steps[this.currentStepIndex], t = !1;
 			this.fieldErrors = {};
 			for (let n of e.fields) {
-				if (!l(n.condition, this.formState)) continue;
-				let e = d(n, this.formState[n.id]);
+				if (!u(n.condition, this.formState)) continue;
+				let e = f(n, this.formState[n.id]);
 				e.valid || (this.fieldErrors[n.id] = e.error || "Invalid value", t = !0);
 			}
 			if (t) return this.render(), !1;
 			let n = Date.now() - this.stepStartTime;
-			if (b(this.schema.id, this.currentStepIndex, e.title, n), this.currentStepIndex < this.schema.steps.length - 1) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.callbacks.onStepChange && this.callbacks.onStepChange(this.currentStepIndex, this.schema.steps[this.currentStepIndex]), this.render(), !0;
+			if (x(this.schema.id, this.currentStepIndex, e.title, n), this.currentStepIndex < this.schema.steps.length - 1) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.callbacks.onStepChange && this.callbacks.onStepChange(this.currentStepIndex, this.schema.steps[this.currentStepIndex]), this.render(), !0;
 			if (this.isLeadFormEnabled()) return this.currentStepIndex++, this.stepStartTime = Date.now(), this.render(), !0;
 		}
 		return !1;
@@ -1323,23 +1326,23 @@ var F = class {
 	}
 	async submitLead(e) {
 		let t = this.schema.leadForm;
-		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), u(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
+		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), d(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
 		this.isSubmitting = !0, this.render();
-		let n = _({ sourceLabel: this.sourceLabel }), r = {
+		let n = v({ sourceLabel: this.sourceLabel }), r = {
 			quoteId: this.currentQuote.quoteId,
 			schemaId: this.schema.id,
 			schemaName: this.schema.name,
 			quote: this.currentQuote,
 			formState: { ...this.formState },
 			lead: {
-				name: c(e.name),
-				email: c(e.email),
-				phone: c(e.phone || ""),
-				address: c(e.address || ""),
-				zipCode: c(e.zipCode || ""),
-				preferredDate: c(e.preferredDate || ""),
-				preferredTime: c(e.preferredTime || ""),
-				notes: c(e.notes || "")
+				name: l(e.name),
+				email: l(e.email),
+				phone: l(e.phone || ""),
+				address: l(e.address || ""),
+				zipCode: l(e.zipCode || ""),
+				preferredDate: l(e.preferredDate || ""),
+				preferredTime: l(e.preferredTime || ""),
+				notes: l(e.notes || "")
 			},
 			attribution: n,
 			submittedAt: (/* @__PURE__ */ new Date()).toISOString(),
@@ -1347,9 +1350,9 @@ var F = class {
 		};
 		try {
 			if (this.webhookUrl) {
-				let e = await M(this.webhookUrl, r);
+				let e = await N(this.webhookUrl, r);
 				(e.status === "rejected" || e.status === "failed") && console.warn("[NymrelQuote] Webhook delivery notice:", e.message), r.delivery = e;
-			} else r.delivery = this.callbacks.onSubmit ? j() : A();
+			} else r.delivery = this.callbacks.onSubmit ? M() : j();
 			if (this.callbacks.onSubmit) try {
 				await this.callbacks.onSubmit(r);
 			} catch (e) {
@@ -1364,7 +1367,7 @@ var F = class {
 				} catch {}
 			}
 			try {
-				S(this.schema.id, r.quoteId, this.currentQuote.target, r.lead.email);
+				C(this.schema.id, r.quoteId, this.currentQuote.target, r.lead.email);
 			} catch {}
 			return this.isSubmitting = !1, this.isSubmitted = !0, this.lastSubmission = r, this.lastDeliveryReceipt = r.delivery ?? null, this.render(), r;
 		} catch (e) {
@@ -1385,18 +1388,18 @@ var F = class {
 		typeof window < "u" && window.print();
 	}
 	render() {
-		let e = k(this.schema.theme), t = "";
+		let e = A(this.schema.theme), t = "";
 		t = this.isSubmitted && this.lastSubmission ? this.renderSuccessScreen(this.lastSubmission) : this.isLeadFormStep() ? this.renderLeadFormStep() : this.renderStepForm(this.schema.steps[this.currentStepIndex]);
 		let n = this.showBreakdownModal ? this.renderBreakdownModal() : "", r = `
       <style>${e}</style>
-      <div class="nym-container" role="region" aria-label="${P(this.schema.name)}">
+      <div class="nym-container" role="region" aria-label="${F(this.schema.name)}">
         <!-- Header -->
         <header class="nym-header">
           <div class="nym-header-content">
-            <h2>${P(this.schema.name)}</h2>
-            ${this.schema.description ? `<p>${P(this.schema.description)}</p>` : ""}
+            <h2>${F(this.schema.name)}</h2>
+            ${this.schema.description ? `<p>${F(this.schema.description)}</p>` : ""}
           </div>
-          ${this.schema.badge ? `<span class="nym-badge">${P(this.schema.badge)}</span>` : ""}
+          ${this.schema.badge ? `<span class="nym-badge">${F(this.schema.badge)}</span>` : ""}
         </header>
 
         <!-- Live Reactive Range Banner -->
@@ -1404,11 +1407,11 @@ var F = class {
           <div class="nym-range-info">
             <span class="nym-range-label">Instant Estimated Range</span>
             <div class="nym-range-values">
-              <span class="nym-range-amount">${P(this.currentQuote.formattedMin)}</span>
+              <span class="nym-range-amount">${F(this.currentQuote.formattedMin)}</span>
               <span class="nym-range-separator">&ndash;</span>
-              <span class="nym-range-amount">${P(this.currentQuote.formattedMax)}</span>
+              <span class="nym-range-amount">${F(this.currentQuote.formattedMax)}</span>
             </div>
-            <span class="nym-range-target">Baseline Target: <strong>${P(this.currentQuote.formattedTarget)}</strong></span>
+            <span class="nym-range-target">Baseline Target: <strong>${F(this.currentQuote.formattedTarget)}</strong></span>
           </div>
           <button type="button" class="nym-btn-breakdown" id="nym-toggle-breakdown" aria-label="View cost breakdown">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
@@ -1425,7 +1428,7 @@ var F = class {
         </div>
         <div class="nym-step-legend">
           <span>Step ${this.currentStepIndex + 1} of ${this.getTotalStepsCount()}</span>
-          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : P(this.schema.steps[this.currentStepIndex]?.title || "")}</span>
+          <span>${this.isLeadFormStep() ? "Lead Contact & Booking" : F(this.schema.steps[this.currentStepIndex]?.title || "")}</span>
         </div>
 
         <!-- Main Step Form Content -->
@@ -1437,7 +1440,7 @@ var F = class {
             ${this.currentQuote.recommendations.map((e) => `
               <div class="nym-recommendation-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>${P(e)}</span>
+                <span>${F(e)}</span>
               </div>
             `).join("")}
           </div>
@@ -1462,8 +1465,8 @@ var F = class {
 		let t = this.currentStepIndex === 0;
 		return `
       <div class="nym-step-view">
-        <h3 class="nym-step-title">${P(e.title)}</h3>
-        ${e.subtitle ? `<p class="nym-step-subtitle">${P(e.subtitle)}</p>` : ""}
+        <h3 class="nym-step-title">${F(e.title)}</h3>
+        ${e.subtitle ? `<p class="nym-step-subtitle">${F(e.subtitle)}</p>` : ""}
 
         <div class="nym-fields-list">
           ${e.fields.map((e) => this.renderField(e)).join("")}
@@ -1479,7 +1482,7 @@ var F = class {
     `;
 	}
 	renderField(e) {
-		if (!l(e.condition, this.formState)) return "";
+		if (!u(e.condition, this.formState)) return "";
 		let t = this.formState[e.id] === void 0 ? e.defaultValue ?? "" : this.formState[e.id], n = this.fieldErrors[e.id], r = "";
 		switch (e.type) {
 			case "slider": {
@@ -1499,7 +1502,7 @@ var F = class {
               max="${i}"
               step="${a}"
               value="${o}"
-              aria-label="${P(e.label)}"
+              aria-label="${F(e.label)}"
             />
           </div>
         `;
@@ -1507,10 +1510,10 @@ var F = class {
 			}
 			case "select":
 				r = `
-          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${P(e.label)}">
+          <select class="nym-select nym-reactive-input" data-field-id="${e.id}" aria-label="${F(e.label)}">
             ${e.options?.map((e) => `
-              <option value="${P(e.id)}" ${String(t) === String(e.id) ? "selected" : ""}>
-                ${P(e.label)} ${e.adder ? `(+${this.currentQuote.currencySymbol}${e.adder})` : ""} ${e.multiplier ? `(${e.multiplier}x)` : ""}
+              <option value="${F(e.id)}" ${String(t) === String(e.id) ? "selected" : ""}>
+                ${F(e.label)} ${e.adder ? `(+${this.currentQuote.currencySymbol}${e.adder})` : ""} ${e.multiplier ? `(${e.multiplier}x)` : ""}
               </option>
             `).join("")}
           </select>
@@ -1518,23 +1521,23 @@ var F = class {
 				break;
 			case "radio":
 				r = `
-          <div class="nym-options-grid" role="radiogroup" aria-label="${P(e.label)}">
+          <div class="nym-options-grid" role="radiogroup" aria-label="${F(e.label)}">
             ${e.options?.map((n) => {
 					let r = String(t) === String(n.id);
 					return `
                 <div
                   class="nym-option-card ${r ? "selected" : ""}"
                   data-field-id="${e.id}"
-                  data-option-id="${P(n.id)}"
+                  data-option-id="${F(n.id)}"
                   role="radio"
                   aria-checked="${r}"
                   tabindex="0"
                 >
                   <div class="nym-option-header">
-                    <span class="nym-option-title">${P(n.label)}</span>
-                    ${n.badge ? `<span class="nym-option-badge">${P(n.badge)}</span>` : ""}
+                    <span class="nym-option-title">${F(n.label)}</span>
+                    ${n.badge ? `<span class="nym-option-badge">${F(n.badge)}</span>` : ""}
                   </div>
-                  ${n.description ? `<p class="nym-option-desc">${P(n.description)}</p>` : ""}
+                  ${n.description ? `<p class="nym-option-desc">${F(n.description)}</p>` : ""}
                   ${n.adder || n.multiplier ? `
                     <div class="nym-option-price">
                       ${n.adder ? `+${this.currentQuote.currencySymbol}${n.adder}` : ""}
@@ -1557,7 +1560,7 @@ var F = class {
                 <div
                   class="nym-checkbox-item ${r ? "checked" : ""}"
                   data-field-id="${e.id}"
-                  data-checkbox-id="${P(t.id)}"
+                  data-checkbox-id="${F(t.id)}"
                   role="checkbox"
                   aria-checked="${r}"
                   tabindex="0"
@@ -1567,10 +1570,10 @@ var F = class {
                   </div>
                   <div class="nym-checkbox-info">
                     <div class="nym-checkbox-title">
-                      <span>${P(t.label)}</span>
+                      <span>${F(t.label)}</span>
                       ${t.adder ? `<span>+${this.currentQuote.currencySymbol}${t.adder}</span>` : ""}
                     </div>
-                    ${t.description ? `<div class="nym-checkbox-desc">${P(t.description)}</div>` : ""}
+                    ${t.description ? `<div class="nym-checkbox-desc">${F(t.description)}</div>` : ""}
                   </div>
                 </div>
               `;
@@ -1589,9 +1592,9 @@ var F = class {
             min="${e.min ?? 0}"
             max="${e.max ?? 999999}"
             step="${e.step ?? 1}"
-            value="${P(t)}"
-            placeholder="${e.placeholder ? P(e.placeholder) : ""}"
-            aria-label="${P(e.label)}"
+            value="${F(t)}"
+            placeholder="${e.placeholder ? F(e.placeholder) : ""}"
+            aria-label="${F(e.label)}"
           />
         `;
 				break;
@@ -1600,21 +1603,21 @@ var F = class {
             type="text"
             class="nym-input nym-reactive-input"
             data-field-id="${e.id}"
-            value="${P(t)}"
-            placeholder="${e.placeholder ? P(e.placeholder) : ""}"
-            aria-label="${P(e.label)}"
+            value="${F(t)}"
+            placeholder="${e.placeholder ? F(e.placeholder) : ""}"
+            aria-label="${F(e.label)}"
           />
         `;
 		}
 		return `
       <div class="nym-field-group">
         <label class="nym-label">
-          <span>${P(e.label)}${e.required ? " *" : ""}</span>
-          ${e.unit && e.type !== "slider" ? `<span class="nym-helper-text">${P(e.unit)}</span>` : ""}
+          <span>${F(e.label)}${e.required ? " *" : ""}</span>
+          ${e.unit && e.type !== "slider" ? `<span class="nym-helper-text">${F(e.unit)}</span>` : ""}
         </label>
         ${r}
-        ${e.helperText ? `<div class="nym-helper-text">${P(e.helperText)}</div>` : ""}
-        ${n ? `<div class="nym-error-text">${P(n)}</div>` : ""}
+        ${e.helperText ? `<div class="nym-helper-text">${F(e.helperText)}</div>` : ""}
+        ${n ? `<div class="nym-error-text">${F(n)}</div>` : ""}
       </div>
     `;
 	}
@@ -1622,39 +1625,39 @@ var F = class {
 		let e = this.schema.leadForm, t = this.fieldErrors._global;
 		return `
       <div class="nym-lead-step">
-        <h3 class="nym-step-title">${P(e?.title || "Lock in Your Official Quote")}</h3>
-        <p class="nym-step-subtitle">${P(e?.subtitle || "Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.")}</p>
+        <h3 class="nym-step-title">${F(e?.title || "Lock in Your Official Quote")}</h3>
+        <p class="nym-step-subtitle">${F(e?.subtitle || "Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.")}</p>
 
-        ${t ? `<div class="nym-error-text" style="margin-bottom: 16px;">${P(t)}</div>` : ""}
+        ${t ? `<div class="nym-error-text" style="margin-bottom: 16px;">${F(t)}</div>` : ""}
 
         <form id="nym-lead-form">
           <div class="nym-field-group">
             <label class="nym-label">Full Name *</label>
-            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${P(this.formState._lead_name || "")}" />
-            ${this.fieldErrors.lead_name ? `<div class="nym-error-text">${P(this.fieldErrors.lead_name)}</div>` : ""}
+            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${F(this.formState._lead_name || "")}" />
+            ${this.fieldErrors.lead_name ? `<div class="nym-error-text">${F(this.fieldErrors.lead_name)}</div>` : ""}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Email Address *</label>
-            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${P(this.formState._lead_email || "")}" />
-            ${this.fieldErrors.lead_email ? `<div class="nym-error-text">${P(this.fieldErrors.lead_email)}</div>` : ""}
+            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${F(this.formState._lead_email || "")}" />
+            ${this.fieldErrors.lead_email ? `<div class="nym-error-text">${F(this.fieldErrors.lead_email)}</div>` : ""}
           </div>
 
           <div class="nym-field-group">
             <label class="nym-label">Phone Number ${e?.requirePhone ? "*" : "(Optional)"}</label>
-            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone ? "required" : ""} placeholder="(555) 019-2834" value="${P(this.formState._lead_phone || "")}" />
-            ${this.fieldErrors.lead_phone ? `<div class="nym-error-text">${P(this.fieldErrors.lead_phone)}</div>` : ""}
+            <input type="tel" name="phone" class="nym-input" ${e?.requirePhone ? "required" : ""} placeholder="(555) 019-2834" value="${F(this.formState._lead_phone || "")}" />
+            ${this.fieldErrors.lead_phone ? `<div class="nym-error-text">${F(this.fieldErrors.lead_phone)}</div>` : ""}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="nym-field-group">
               <label class="nym-label">Street Address ${e?.requireAddress ? "*" : ""}</label>
-              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${P(this.formState._lead_address || "")}" />
-              ${this.fieldErrors.lead_address ? `<div class="nym-error-text">${P(this.fieldErrors.lead_address)}</div>` : ""}
+              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${F(this.formState._lead_address || "")}" />
+              ${this.fieldErrors.lead_address ? `<div class="nym-error-text">${F(this.fieldErrors.lead_address)}</div>` : ""}
             </div>
             <div class="nym-field-group">
               <label class="nym-label">Zip Code</label>
-              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${P(this.formState._lead_zip || "")}" />
+              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${F(this.formState._lead_zip || "")}" />
             </div>
           </div>
 
@@ -1662,7 +1665,7 @@ var F = class {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Date</label>
-                <input type="date" name="preferredDate" class="nym-input" value="${P(this.formState._lead_date || "")}" />
+                <input type="date" name="preferredDate" class="nym-input" value="${F(this.formState._lead_date || "")}" />
               </div>
               <div class="nym-field-group">
                 <label class="nym-label">Preferred Window</label>
@@ -1678,12 +1681,12 @@ var F = class {
           ${e?.collectNotes === !1 ? "" : `
             <div class="nym-field-group">
               <label class="nym-label">Project Notes or Questions</label>
-              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${P(this.formState._lead_notes || "")}</textarea>
+              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${F(this.formState._lead_notes || "")}</textarea>
             </div>
           `}
 
           <div class="nym-helper-text" style="margin-bottom: 20px;">
-            ${P(e?.disclaimerText || "By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.")}
+            ${F(e?.disclaimerText || "By submitting, you agree to receive project updates and quote confirmation. We respect your privacy and never sell data.")}
           </div>
 
           <div class="nym-footer">
@@ -1703,37 +1706,37 @@ var F = class {
 		return `
       <div class="nym-success-screen">
         <div class="nym-success-icon">✓</div>
-        <h3 class="nym-step-title">${P(n && t?.successTitle || "Estimate Captured Successfully!")}</h3>
-        <p class="nym-step-subtitle">${P(n && t?.successMessage || "Your quote summary is below. Print or save a copy for your records.")}</p>
+        <h3 class="nym-step-title">${F(n && t?.successTitle || "Estimate Captured Successfully!")}</h3>
+        <p class="nym-step-subtitle">${F(n && t?.successMessage || "Your quote summary is below. Print or save a copy for your records.")}</p>
         ${e.localHandlingFailed ? "<p role=\"alert\">The page handler failed after capture. The delivery status below records the observed outcome.</p>" : ""}
 
         <div class="nym-receipt-card">
           <div class="nym-delivery-status nym-receipt-row" role="status">
             <span class="nym-receipt-key">Delivery Status:</span>
-            <span class="nym-receipt-val">${P(N(this.lastDeliveryReceipt))}</span>
+            <span class="nym-receipt-val">${F(P(this.lastDeliveryReceipt))}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Quote Reference ID:</span>
-            <span class="nym-receipt-val" style="font-family: monospace;">${P(e.quoteId)}</span>
+            <span class="nym-receipt-val" style="font-family: monospace;">${F(e.quoteId)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Estimated Price Range:</span>
             <span class="nym-receipt-val" style="color: var(--nym-accent); font-size: 1.05rem;">
-              ${P(e.quote.formattedMin)} &ndash; ${P(e.quote.formattedMax)}
+              ${F(e.quote.formattedMin)} &ndash; ${F(e.quote.formattedMax)}
             </span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Baseline Target:</span>
-            <span class="nym-receipt-val">${P(e.quote.formattedTarget)}</span>
+            <span class="nym-receipt-val">${F(e.quote.formattedTarget)}</span>
           </div>
           <div class="nym-receipt-row">
             <span class="nym-receipt-key">Recipient:</span>
-            <span class="nym-receipt-val">${P(e.lead.name)} (${P(e.lead.email)})</span>
+            <span class="nym-receipt-val">${F(e.lead.name)} (${F(e.lead.email)})</span>
           </div>
           ${e.lead.preferredDate ? `
             <div class="nym-receipt-row">
               <span class="nym-receipt-key">Requested Consultation:</span>
-              <span class="nym-receipt-val">${P(e.lead.preferredDate)} (${P(e.lead.preferredTime || "Anytime")})</span>
+              <span class="nym-receipt-val">${F(e.lead.preferredDate)} (${F(e.lead.preferredTime || "Anytime")})</span>
             </div>
           ` : ""}
         </div>
@@ -1764,19 +1767,19 @@ var F = class {
                 ${this.currentQuote.breakdown.map((e) => `
                   <tr>
                     <td>
-                      <div class="nym-breakdown-label">${P(e.label)}</div>
-                      ${e.description ? `<div class="nym-breakdown-subtext">${P(e.description)}</div>` : ""}
+                      <div class="nym-breakdown-label">${F(e.label)}</div>
+                      ${e.description ? `<div class="nym-breakdown-subtext">${F(e.description)}</div>` : ""}
                     </td>
-                    <td class="nym-breakdown-val">${P(e.formattedAmount)}</td>
+                    <td class="nym-breakdown-val">${F(e.formattedAmount)}</td>
                   </tr>
                 `).join("")}
                 <tr class="nym-breakdown-total">
                   <td><strong>Estimated Baseline Target</strong></td>
-                  <td class="nym-breakdown-val">${P(this.currentQuote.formattedTarget)}</td>
+                  <td class="nym-breakdown-val">${F(this.currentQuote.formattedTarget)}</td>
                 </tr>
                 <tr>
                   <td><strong>Dynamic Estimated Range</strong></td>
-                  <td class="nym-breakdown-val">${P(this.currentQuote.formattedMin)} &ndash; ${P(this.currentQuote.formattedMax)}</td>
+                  <td class="nym-breakdown-val">${F(this.currentQuote.formattedMin)} &ndash; ${F(this.currentQuote.formattedMax)}</td>
                 </tr>
               </tbody>
             </table>
@@ -1839,10 +1842,10 @@ var F = class {
 		s && s.addEventListener("click", () => this.reset());
 	}
 };
-function I(e, t) {
+function L(e, t) {
 	let n = typeof e == "string" ? document.querySelector(e) : e;
 	if (!n) throw Error(`[NymrelQuote] Container element not found: ${e}`);
-	return new F(n, t);
+	return new I(n, t);
 }
 //#endregion
-export { s as C, d as D, c as E, l as S, u as T, x as _, E as a, f as b, O as c, v as d, _ as f, S as g, C as h, M as i, k as l, g as m, I as n, w as o, h as p, j as r, T as s, F as t, D as u, y as v, o as w, p as x, b as y };
+export { c as C, f as D, l as E, u as S, d as T, S as _, D as a, p as b, k as c, y as d, v as f, C as g, w as h, N as i, A as l, _ as m, L as n, T as o, g as p, M as r, E as s, I as t, O as u, b as v, s as w, m as x, x as y };
