@@ -1,7 +1,7 @@
-import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, i as p, l as m, m as h, o as g, p as _, r as v, s as y, t as b, u as x, v as S, w as C, x as w, y as T } from "./QuoteWidget-CTmhoTlm.js";
+import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, i as p, l as m, m as h, o as g, p as _, r as v, s as y, t as b, u as x, v as S, w as C, x as w, y as T } from "./QuoteWidget-B860m9yz.js";
 import { useCallback as E, useEffect as D, useRef as O, useState as k } from "react";
 import { jsx as A } from "react/jsx-runtime";
-//#region src/components/ReactQuoteWidget.tsx
+// src/components/ReactQuoteWidget.tsx
 var j = ({ schema: e, initialState: t, theme: n, sourceLabel: r, webhookUrl: i, useShadowDom: a = !0, onCalculate: o, onStepChange: s, onSubmit: c, onError: l, className: u, style: d }) => {
 	let f = O(null), p = O(null);
 	return D(() => {
@@ -135,5 +135,4 @@ function M(e, r) {
 		}, [e, r])
 	};
 }
-//#endregion
 export { o as DARK_THEME, g as DEFAULT_WARM_THEME, y as LIGHT_THEME, j as QuoteWidget, s as applyRounding, w as calculateQuote, l as emitAnalyticsEvent, r as evaluateCondition, u as extractAttribution, e as formatCurrency, c as generateCssVariables, C as generateQuoteId, _ as getDeviceType, h as getReferringDomain, m as getShadowStyles, i as isValidEmail, x as resolveTheme, n as sanitizeInput, f as trackCtaClicked, d as trackLeadSubmitted, a as trackQuoteCalculated, S as trackQuoteViewed, T as trackStepCompleted, M as useQuoteEngine, t as validateField };

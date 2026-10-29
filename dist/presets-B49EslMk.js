@@ -1,4 +1,4 @@
-//#region src/presets/roofing.ts
+// src/presets/roofing.ts
 var e = {
 	id: "roofing-estimator-v1",
 	name: "Residential Roofing & Siding Estimator",
@@ -698,5 +698,4 @@ var e = {
 function a(e) {
 	return i[e.toLowerCase().trim()];
 }
-//#endregion
 export { t as a, n as i, a as n, e as o, r, i as t };
