@@ -1,4 +1,4 @@
-//#region src/core/engine.ts
+// src/core/engine.ts
 function e(e, t) {
 	if (e == null || e === "" || typeof e == "boolean") throw RangeError(`${t} must be a finite number.`);
 	let n;
@@ -280,8 +280,7 @@ function m(r, l) {
 		quoteId: g
 	};
 }
-//#endregion
-//#region src/core/attribution.ts
+// src/core/attribution.ts
 function h() {
 	return "sess_" + Array.from(globalThis.crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(16)), (e) => e.toString(16).padStart(2, "0")).join("");
 }
@@ -393,8 +392,7 @@ function w(e, t, n) {
 		quoteId: n
 	});
 }
-//#endregion
-//#region src/components/WarmTheme.ts
+// src/components/WarmTheme.ts
 var T = {
 	mode: "warm",
 	fontFamily: "-apple-system, BlinkMacSystemFont, \"Plus Jakarta Sans\", \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif",
@@ -1202,8 +1200,7 @@ function A(e) {
     }
   `;
 }
-//#endregion
-//#region src/core/lead-delivery.ts
+// src/core/lead-delivery.ts
 function j(e = (/* @__PURE__ */ new Date()).toISOString()) {
 	return {
 		status: "not_configured",
@@ -1259,8 +1256,7 @@ async function N(e, t) {
 function P(e) {
 	return e ? e.message : j().message;
 }
-//#endregion
-//#region src/components/QuoteWidget.ts
+// src/components/QuoteWidget.ts
 function F(e) {
 	return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
@@ -1326,7 +1322,7 @@ var I = class {
 	}
 	async submitLead(e) {
 		let t = this.schema.leadForm;
-		if (this.fieldErrors = {}, (!e.name || String(e.name).trim() === "") && (this.fieldErrors.lead_name = "Full Name is required."), d(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (!e.phone || !/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone))) && (this.fieldErrors.lead_phone = "Phone number is required."), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
+		if (this.fieldErrors = {}, e.name && String(e.name).trim() !== "" || (this.fieldErrors.lead_name = "Full Name is required."), d(e.email) || (this.fieldErrors.lead_email = "A valid email address is required."), t?.requirePhone && (e.phone && /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(String(e.phone)) || (this.fieldErrors.lead_phone = "Phone number is required.")), t?.requireAddress && !e.address && (this.fieldErrors.lead_address = "Street address or zip code is required."), Object.keys(this.fieldErrors).length > 0) return this.render(), null;
 		this.isSubmitting = !0, this.render();
 		let n = v({ sourceLabel: this.sourceLabel }), r = {
 			quoteId: this.currentQuote.quoteId,
@@ -1847,5 +1843,4 @@ function L(e, t) {
 	if (!n) throw Error(`[NymrelQuote] Container element not found: ${e}`);
 	return new I(n, t);
 }
-//#endregion
 export { c as C, f as D, l as E, u as S, d as T, S as _, D as a, p as b, k as c, y as d, v as f, C as g, w as h, N as i, A as l, _ as m, L as n, T as o, g as p, M as r, E as s, I as t, O as u, b as v, s as w, m as x, x as y };

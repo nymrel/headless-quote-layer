@@ -1,6 +1,6 @@
-import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, l as p, m, n as h, o as g, p as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-CTmhoTlm.js";
-import { a as T, i as E, n as D, o as O, r as k, t as A } from "./presets-B56HpqVm.js";
-//#region src/web-component/NymrelQuoteLayer.ts
+import { C as e, D as t, E as n, S as r, T as i, _ as a, a as o, b as s, c, d as l, f as u, g as d, h as f, l as p, m, n as h, o as g, p as _, s as v, t as y, u as b, v as x, w as S, x as C, y as w } from "./QuoteWidget-B860m9yz.js";
+import { a as T, i as E, n as D, o as O, r as k, t as A } from "./presets-B49EslMk.js";
+// src/web-component/NymrelQuoteLayer.ts
 var j = globalThis.HTMLElement ?? class {}, M = class extends j {
 	widgetInstance = null;
 	static get observedAttributes() {
@@ -121,8 +121,6 @@ var j = globalThis.HTMLElement ?? class {}, M = class extends j {
 function N(e = "nymrel-quote-layer") {
 	typeof window < "u" && typeof customElements < "u" && (customElements.get(e) || customElements.define(e, M));
 }
-//#endregion
-//#region src/web-component/index.ts
+// src/web-component/index.ts
 N();
-//#endregion
 export { o as DARK_THEME, g as DEFAULT_WARM_THEME, v as LIGHT_THEME, M as NymrelQuoteLayerElement, y as NymrelQuoteWidget, A as PRESET_REGISTRY, s as applyRounding, C as calculateQuote, h as createQuoteWidget, l as emitAnalyticsEvent, r as evaluateCondition, u as extractAttribution, e as formatCurrency, c as generateCssVariables, S as generateQuoteId, _ as getDeviceType, D as getPreset, m as getReferringDomain, p as getShadowStyles, T as hvacPreset, i as isValidEmail, E as plumbingPreset, N as registerWebComponent, b as resolveTheme, O as roofingPreset, n as sanitizeInput, k as softwarePreset, f as trackCtaClicked, d as trackLeadSubmitted, a as trackQuoteCalculated, x as trackQuoteViewed, w as trackStepCompleted, t as validateField };
