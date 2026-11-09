@@ -1,5 +1,12 @@
 # @nymrel/headless-quote
 
+## Choose your starting point
+
+- **Customers getting an estimate:** enter your project details, review the range and itemized breakdown, and choose whether to share contact details. Contact fields stay in the current widget while you edit earlier steps or correct an error. Starting a new quote clears them; reloading the page does not restore them. An estimate is not a booked job or payment.
+- **Developers embedding the calculator:** start with the source-backed [embed instructions](#-quickstart-1-line-embed), choose a trade preset, and configure your own prices and lead delivery. Validate the observed delivery receipt before showing a confirmation.
+- **Agents and integrations:** use the exported calculation API and structured submission/delivery objects. Treat only `delivery.status === 'accepted'` as observed webhook acceptance. A callback-only or locally captured estimate does not prove external delivery. Obtain caller authorization before sending contact details.
+
+
 [![Package release](https://img.shields.io/badge/package%20release-gated-A8541F.svg?style=flat-square)](#release-status)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2A332E.svg?style=flat-square)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0-2E6B4F.svg?style=flat-square)]()
