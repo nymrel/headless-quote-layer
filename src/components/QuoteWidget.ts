@@ -60,6 +60,7 @@ export class NymrelQuoteWidget {
   private sourceLabel?: string;
   private webhookUrl?: string;
   private fieldErrors: Record<string, string> = {};
+  private leadState: Record<string, string> = {};
   private stepStartTime = Date.now();
 
   constructor(target: HTMLElement, options: QuoteWidgetOptions) {
@@ -208,6 +209,9 @@ export class NymrelQuoteWidget {
   public async submitLead(leadData: Record<string, any>): Promise<QuoteSubmission | null> {
     const leadFormConfig = this.schema.leadForm;
     this.fieldErrors = {};
+    for (const [name, value] of Object.entries(leadData)) {
+      this.leadState[name] = String(sanitizeInput(value) ?? '');
+    }
 
     // Validate Lead Data
     if (!leadData.name || String(leadData.name).trim() === '') {
@@ -345,6 +349,7 @@ export class NymrelQuoteWidget {
     this.lastSubmission = null;
     this.lastDeliveryReceipt = null;
     this.fieldErrors = {};
+    this.leadState = {};
     this.recalculate();
   }
 
@@ -361,6 +366,11 @@ export class NymrelQuoteWidget {
    * Render complete DOM tree into container
    */
   public render(): void {
+    const active = 'activeElement' in this.container ? this.container.activeElement : document.activeElement;
+    const focused = (active && this.container.contains(active) ? active : null) as HTMLInputElement | HTMLTextAreaElement | null;
+    const focusField = focused?.getAttribute('data-field-id');
+    const selection = focused && ['text', 'email', 'tel'].includes(focused.type)
+      ? [focused.selectionStart, focused.selectionEnd] as const : null;
     const themeStyles = getShadowStyles(this.schema.theme);
 
     let contentHtml = '';
@@ -435,7 +445,7 @@ export class NymrelQuoteWidget {
 
         <!-- Trust Footer -->
         <footer class="nym-trust-footer">
-          <span>🔒 Instant Guaranteed Price Range &bull; Zero Spam Guarantee</span>
+          <span>🔒 Estimate only &bull; Review delivery status after submitting</span>
           <a class="nym-trust-link" href="https://github.com/nymrel/headless-quote-layer" target="_blank" rel="noopener noreferrer">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
             Built with Nymrel Quote Layer
@@ -449,6 +459,20 @@ export class NymrelQuoteWidget {
 
     this.container.innerHTML = html;
     this.attachEventListeners();
+    if (focusField) {
+      const replacement = Array.from(this.container.querySelectorAll<HTMLInputElement>('[data-field-id]'))
+        .find(input => input.getAttribute('data-field-id') === focusField);
+      // Preserve the in-progress text, including a trailing space, while the
+      // normalized calculation state is rendered. The next keystroke must not
+      // join two words or move the cursor to the end.
+      if (replacement instanceof HTMLInputElement && focused instanceof HTMLInputElement) {
+        replacement.value = focused.value;
+      }
+      replacement?.focus({ preventScroll: true });
+      if (selection && replacement && replacement.type === 'text') {
+        replacement.setSelectionRange(selection[0], selection[1]);
+      }
+    }
   }
 
   /**
@@ -655,54 +679,54 @@ export class NymrelQuoteWidget {
 
     return `
       <div class="nym-lead-step">
-        <h3 class="nym-step-title">${escapeHtml(config?.title || 'Lock in Your Official Quote')}</h3>
-        <p class="nym-step-subtitle">${escapeHtml(config?.subtitle || 'Enter your contact details to save your estimate, receive your official PDF breakdown, and schedule an on-site inspection.')}</p>
+        <h3 class="nym-step-title">${escapeHtml(config?.title || 'Save your estimate')}</h3>
+        <p class="nym-step-subtitle">${escapeHtml(config?.subtitle || 'Add your contact details to request a follow-up about this estimate.')}</p>
 
         ${globalErr ? `<div class="nym-error-text" style="margin-bottom: 16px;">${escapeHtml(globalErr)}</div>` : ''}
 
         <form id="nym-lead-form">
           <div class="nym-field-group">
-            <label class="nym-label">Full Name *</label>
-            <input type="text" name="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${escapeHtml(this.formState._lead_name || '')}" />
+            <label class="nym-label" for="nym-lead-name">Full Name *</label>
+            <input type="text" id="nym-lead-name" name="name" autocomplete="name" class="nym-input" required placeholder="e.g. Alex Morgan" value="${escapeHtml(this.leadState.name || '')}" />
             ${this.fieldErrors['lead_name'] ? `<div class="nym-error-text">${escapeHtml(this.fieldErrors['lead_name'])}</div>` : ''}
           </div>
 
           <div class="nym-field-group">
-            <label class="nym-label">Email Address *</label>
-            <input type="email" name="email" class="nym-input" required placeholder="alex@example.com" value="${escapeHtml(this.formState._lead_email || '')}" />
+            <label class="nym-label" for="nym-lead-email">Email Address *</label>
+            <input type="email" id="nym-lead-email" name="email" autocomplete="email" class="nym-input" required placeholder="alex@example.com" value="${escapeHtml(this.leadState.email || '')}" />
             ${this.fieldErrors['lead_email'] ? `<div class="nym-error-text">${escapeHtml(this.fieldErrors['lead_email'])}</div>` : ''}
           </div>
 
           <div class="nym-field-group">
-            <label class="nym-label">Phone Number ${config?.requirePhone ? '*' : '(Optional)'}</label>
-            <input type="tel" name="phone" class="nym-input" ${config?.requirePhone ? 'required' : ''} placeholder="(555) 019-2834" value="${escapeHtml(this.formState._lead_phone || '')}" />
+            <label class="nym-label" for="nym-lead-phone">Phone Number ${config?.requirePhone ? '*' : '(Optional)'}</label>
+            <input type="tel" id="nym-lead-phone" name="phone" autocomplete="tel" class="nym-input" ${config?.requirePhone ? 'required' : ''} placeholder="(555) 019-2834" value="${escapeHtml(this.leadState.phone || '')}" />
             ${this.fieldErrors['lead_phone'] ? `<div class="nym-error-text">${escapeHtml(this.fieldErrors['lead_phone'])}</div>` : ''}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="nym-field-group">
-              <label class="nym-label">Street Address ${config?.requireAddress ? '*' : ''}</label>
-              <input type="text" name="address" class="nym-input" placeholder="123 Maple Way" value="${escapeHtml(this.formState._lead_address || '')}" />
+              <label class="nym-label" for="nym-lead-address">Street Address ${config?.requireAddress ? '*' : ''}</label>
+              <input type="text" id="nym-lead-address" name="address" autocomplete="street-address" class="nym-input" placeholder="123 Maple Way" value="${escapeHtml(this.leadState.address || '')}" />
               ${this.fieldErrors['lead_address'] ? `<div class="nym-error-text">${escapeHtml(this.fieldErrors['lead_address'])}</div>` : ''}
             </div>
             <div class="nym-field-group">
-              <label class="nym-label">Zip Code</label>
-              <input type="text" name="zipCode" class="nym-input" placeholder="90210" value="${escapeHtml(this.formState._lead_zip || '')}" />
+              <label class="nym-label" for="nym-lead-zipCode">Zip Code</label>
+              <input type="text" id="nym-lead-zipCode" name="zipCode" autocomplete="postal-code" class="nym-input" placeholder="90210" value="${escapeHtml(this.leadState.zipCode || '')}" />
             </div>
           </div>
 
           ${config?.requireDate ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="nym-field-group">
-                <label class="nym-label">Preferred Date</label>
-                <input type="date" name="preferredDate" class="nym-input" value="${escapeHtml(this.formState._lead_date || '')}" />
+                <label class="nym-label" for="nym-lead-preferredDate">Preferred Date</label>
+                <input type="date" id="nym-lead-preferredDate" name="preferredDate" autocomplete="off" class="nym-input" value="${escapeHtml(this.leadState.preferredDate || '')}" />
               </div>
               <div class="nym-field-group">
-                <label class="nym-label">Preferred Window</label>
-                <select name="preferredTime" class="nym-select">
-                  <option value="morning">Morning (8am - 12pm)</option>
-                  <option value="afternoon">Afternoon (12pm - 4pm)</option>
-                  <option value="evening">Evening (4pm - 7pm)</option>
+                <label class="nym-label" for="nym-lead-preferredTime">Preferred Window</label>
+                <select id="nym-lead-preferredTime" name="preferredTime" autocomplete="off" class="nym-select">
+                  <option value="morning" ${(this.leadState.preferredTime || 'morning') === 'morning' ? 'selected' : ''}>Morning (8am - 12pm)</option>
+                  <option value="afternoon" ${(this.leadState.preferredTime || 'morning') === 'afternoon' ? 'selected' : ''}>Afternoon (12pm - 4pm)</option>
+                  <option value="evening" ${(this.leadState.preferredTime || 'morning') === 'evening' ? 'selected' : ''}>Evening (4pm - 7pm)</option>
                 </select>
               </div>
             </div>
@@ -710,8 +734,8 @@ export class NymrelQuoteWidget {
 
           ${config?.collectNotes !== false ? `
             <div class="nym-field-group">
-              <label class="nym-label">Project Notes or Questions</label>
-              <textarea name="notes" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${escapeHtml(this.formState._lead_notes || '')}</textarea>
+              <label class="nym-label" for="nym-lead-notes">Project Notes or Questions</label>
+              <textarea id="nym-lead-notes" name="notes" autocomplete="off" class="nym-textarea" placeholder="Tell us about specific property access, timeline goals, or special requirements...">${escapeHtml(this.leadState.notes || '')}</textarea>
             </div>
           ` : ''}
 
@@ -895,6 +919,12 @@ export class NymrelQuoteWidget {
     // 5. Lead Form Submission
     const leadForm = this.container.querySelector<HTMLFormElement>('#nym-lead-form');
     if (leadForm) {
+      const preserveLeadInput = (event: Event): void => {
+        const input = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        if (input.name) this.leadState[input.name] = input.value;
+      };
+      leadForm.addEventListener('input', preserveLeadInput);
+      leadForm.addEventListener('change', preserveLeadInput);
       leadForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(leadForm);
